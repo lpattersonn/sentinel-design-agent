@@ -40,7 +40,7 @@ export async function searchMemory(
   query: string,
   opts?: { industry?: string; limit?: number },
 ): Promise<SearchHit[]> {
-  const limit = opts?.limit ?? DEFAULT_LIMIT;
+  const limit = Math.min(opts?.limit ?? DEFAULT_LIMIT, 20);
   const industry = normalizeIndustry(opts?.industry) ?? undefined;
   const vec = await embedOne(query);
 

@@ -15,6 +15,13 @@
       "when": 1784866935169,
       "tag": "0001_known_mattie_franklin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784898946976,
+      "tag": "0002_stiff_naoko",
+      "breakpoints": true
     }
   ]
 }

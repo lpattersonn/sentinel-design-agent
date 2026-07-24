@@ -3,6 +3,13 @@ import type { Metadata } from "next";
 import { desc } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { patterns } from "@/lib/db/schema";
+import {
+  EmptySheet,
+  Meter,
+  PageHeader,
+  SetupSheet,
+  TickScale,
+} from "@/components/sheet";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Patterns" };
@@ -61,41 +68,10 @@ function groupByCategory(
     groups.set(row.category, list);
   }
   const known = CATEGORY_ORDER.filter((c) => groups.has(c));
-  const rest = [...groups.keys()].filter((c) => !CATEGORY_ORDER.includes(c)).sort();
+  const rest = [...groups.keys()]
+    .filter((c) => !CATEGORY_ORDER.includes(c))
+    .sort();
   return [...known, ...rest].map((c) => [c, groups.get(c) ?? []]);
-}
-
-function ComplexityDots({ level }: { level: number }) {
-  return (
-    <span
-      className="inline-flex items-center gap-[3px]"
-      title={`Complexity ${level}/5`}
-      aria-label={`Complexity ${level} of 5`}
-    >
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span
-          key={i}
-          className={`h-[5px] w-[5px] rotate-45 ${i <= level ? "bg-dim" : "bg-line"}`}
-        />
-      ))}
-    </span>
-  );
-}
-
-function SetupCard() {
-  return (
-    <div className="panel mt-8 max-w-xl p-8">
-      <p className="eyebrow text-amber">Awaiting connection</p>
-      <h2 className="mt-3 font-display text-2xl text-ink">
-        Sentinel is not connected to a database yet
-      </h2>
-      <p className="mt-3 text-sm leading-relaxed text-dim">
-        Point <span className="codechip">DATABASE_URL</span> at your Supabase
-        Postgres, then run <span className="codechip">npm run db:migrate</span>{" "}
-        and <span className="codechip">npm run seed</span>.
-      </p>
-    </div>
-  );
 }
 
 export default async function PatternsPage() {
@@ -104,43 +80,34 @@ export default async function PatternsPage() {
 
   return (
     <div>
-      <header>
-        <p className="eyebrow">Reusable knowledge</p>
-        <div className="mt-2 flex items-baseline justify-between gap-4">
-          <h1 className="font-display text-4xl tracking-tight text-ink">
-            Patterns
-          </h1>
-          {rows && (
-            <span className="font-mono text-[11px] text-faint">
-              {rows.length} IN LIBRARY
-            </span>
-          )}
-        </div>
-        <div className="titlerule" />
-      </header>
+      <PageHeader
+        eyebrow="Reusable knowledge"
+        sheet="SHT 03 · LIBRARY"
+        title="Patterns"
+        meta={rows ? `${rows.length} IN LIBRARY` : undefined}
+      />
 
       {!rows ? (
-        <SetupCard />
+        <SetupSheet />
       ) : rows.length === 0 ? (
-        <div className="panel mt-8 max-w-xl p-8">
-          <h2 className="font-display text-xl text-ink">Library is empty</h2>
-          <p className="mt-3 text-sm leading-relaxed text-dim">
-            Run <span className="codechip">npm run seed</span> to load the
+        <EmptySheet title="Library is empty">
+          <p>
+            Run <code className="codechip">npm run seed</code> to load the
             curated starter patterns, or let the learning engine grow the
-            library from feedback.
+            library from project feedback.
           </p>
-        </div>
+        </EmptySheet>
       ) : (
-        <div className="mt-8 space-y-10">
+        <div className="mt-9 space-y-10">
           {groups.map(([category, items]) => (
-            <section key={category}>
+            <section key={category} aria-label={`${category} patterns`}>
               <div className="flex items-center gap-3">
-                <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-amber">
+                <h2 className="font-mono text-[11px] uppercase tracking-[0.22em] text-trace">
                   {category}
                 </h2>
-                <span className="h-px flex-1 bg-line" />
-                <span className="font-mono text-[10px] text-faint">
-                  {items.length}
+                <span className="h-px flex-1 bg-line" aria-hidden="true" />
+                <span className="font-mono text-[10px] text-faint num">
+                  {items.length} {items.length === 1 ? "SHEET" : "SHEETS"}
                 </span>
               </div>
               <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -150,35 +117,37 @@ export default async function PatternsPage() {
                     href={`/patterns/${p.id}`}
                     className="rowlink group flex flex-col p-5"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <h3 className="font-display text-lg leading-snug text-ink transition-colors group-hover:text-amber">
-                        {p.name}
-                      </h3>
-                      <span
-                        className="shrink-0 text-right"
-                        title={`Conversion score ${p.conversionScore}/100`}
-                      >
-                        <span className="block font-mono text-lg leading-none text-ink">
-                          {p.conversionScore}
-                        </span>
-                        <span className="mt-1 block h-[3px] w-12 rounded-full bg-raised">
-                          <span
-                            className="block h-full rounded-full bg-amber"
-                            style={{
-                              width: `${Math.min(100, Math.max(0, p.conversionScore))}%`,
-                            }}
-                          />
-                        </span>
-                      </span>
-                    </div>
-                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-dim">
+                    <h3 className="font-display text-[18px] font-semibold uppercase leading-snug tracking-[0.02em] text-ink transition-colors group-hover:text-trace">
+                      {p.name}
+                    </h3>
+                    <p className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-dim">
                       {p.description}
                     </p>
-                    <div className="mt-auto flex items-center justify-between pt-3">
-                      <ComplexityDots level={p.complexity} />
-                      <span className="font-mono text-[10px] text-faint">
-                        CONV / CMPLX
-                      </span>
+                    <div className="mt-auto pt-4">
+                      <div
+                        className="flex items-center gap-3"
+                        title={`Conversion score ${p.conversionScore}/100`}
+                      >
+                        <span className="w-9 shrink-0 font-mono text-[9px] tracking-[0.14em] text-faint">
+                          CONV
+                        </span>
+                        <Meter value={p.conversionScore} />
+                        <span className="w-7 shrink-0 text-right font-mono text-[12px] text-ink num">
+                          {p.conversionScore}
+                        </span>
+                      </div>
+                      <div
+                        className="mt-2 flex items-center gap-3"
+                        title={`Complexity ${p.complexity}/5`}
+                      >
+                        <span className="w-9 shrink-0 font-mono text-[9px] tracking-[0.14em] text-faint">
+                          CMPLX
+                        </span>
+                        <TickScale value={p.complexity} />
+                        <span className="ml-auto w-7 shrink-0 text-right font-mono text-[12px] text-faint num">
+                          {p.complexity}/5
+                        </span>
+                      </div>
                     </div>
                   </Link>
                 ))}

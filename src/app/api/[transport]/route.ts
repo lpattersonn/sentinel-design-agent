@@ -1,6 +1,7 @@
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod/v4";
 import { isAuthorized, unauthorized } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/rateLimit";
 import { brainMode } from "@/lib/brain";
 import {
   AnalyzeInputSchema,
@@ -350,6 +351,8 @@ const handler = createMcpHandler(
 const withAuth =
   (h: (req: Request) => Promise<Response> | Response) => async (req: Request) => {
     if (!isAuthorized(req)) return unauthorized();
+    const limited = await enforceRateLimit(req);
+    if (limited) return limited;
     // The /mcp alias (next.config rewrite) preserves the original URL, but
     // mcp-handler matches the pathname against basePath — normalize it.
     const url = new URL(req.url);

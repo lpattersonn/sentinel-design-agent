@@ -1,9 +1,19 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { designMemories, type DesignMemoryRow } from "@/lib/db/schema";
 import type { DesignAnalysis } from "@/lib/types";
+import {
+  BackLink,
+  KV,
+  MarkList,
+  Note,
+  PageHeader,
+  SectionPanel,
+  SetupSheet,
+  fmtDate,
+  paletteOf,
+} from "@/components/sheet";
 
 export const dynamic = "force-dynamic";
 
@@ -30,74 +40,24 @@ async function loadMemory(id: string): Promise<LoadResult> {
   }
 }
 
-function fmtDate(d: Date): string {
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function normalizeHex(hex: string): string | null {
-  const h = hex.startsWith("#") ? hex : `#${hex}`;
-  return /^#[0-9a-fA-F]{3,8}$/.test(h) ? h : null;
-}
-
-function Section({
-  title,
-  children,
-  className = "",
-}: {
-  title: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className={`panel p-6 ${className}`}>
-      <h2 className="eyebrow">{title}</h2>
-      <div className="mt-3">{children}</div>
-    </section>
-  );
-}
-
-function Note({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm leading-relaxed text-dim">{children}</p>;
-}
-
-function KV({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-line py-2 last:border-b-0">
-      <span className="font-mono text-[10px] tracking-[0.14em] text-faint">
-        {label.toUpperCase()}
-      </span>
-      <span className="text-right text-sm text-ink">{value}</span>
-    </div>
-  );
-}
-
+/** Level → tone for hierarchy strength and accessibility estimate. */
 const LEVEL_COLOR: Record<string, string> = {
-  strong: "text-sage",
-  AAA: "text-sage",
-  AA: "text-sage",
-  moderate: "text-amber",
-  "partial-AA": "text-amber",
-  weak: "text-rust",
-  poor: "text-rust",
+  strong: "text-trace",
+  AAA: "text-trace",
+  AA: "text-trace",
+  moderate: "text-ink",
+  "partial-AA": "text-ink",
+  weak: "text-redline",
+  poor: "text-redline",
 };
 
-function SetupCard() {
+function LevelTag({ level }: { level: string }) {
   return (
-    <div className="panel mt-8 max-w-xl p-8">
-      <p className="eyebrow text-amber">Awaiting connection</p>
-      <h2 className="mt-3 font-display text-2xl text-ink">
-        Sentinel is not connected to a database yet
-      </h2>
-      <p className="mt-3 text-sm leading-relaxed text-dim">
-        Point <span className="codechip">DATABASE_URL</span> at your Supabase
-        Postgres, then run <span className="codechip">npm run db:migrate</span>{" "}
-        and <span className="codechip">npm run seed</span>.
-      </p>
-    </div>
+    <span
+      className={`font-mono text-xs uppercase tracking-[0.14em] ${LEVEL_COLOR[level] ?? "text-ink"}`}
+    >
+      {level}
+    </span>
   );
 }
 
@@ -113,7 +73,7 @@ export default async function MemoryDetailPage({
     return (
       <div>
         <p className="eyebrow">Memory</p>
-        <SetupCard />
+        <SetupSheet />
       </div>
     );
   }
@@ -121,46 +81,41 @@ export default async function MemoryDetailPage({
 
   const m = result.memory;
   const a = (m.analysis ?? {}) as Partial<DesignAnalysis>;
+  const palette = paletteOf(m.analysis);
 
   return (
     <div>
-      <Link
-        href="/memories"
-        className="font-mono text-[11px] text-faint transition-colors hover:text-amber"
-      >
-        ← MEMORIES
-      </Link>
+      <BackLink href="/memories" label="SHT 02 · MEMORIES" />
 
-      <header className="mt-4">
-        <p className="eyebrow">
-          {[m.sourceType, m.industry].filter(Boolean).join("  ·  ")}
-        </p>
-        <h1 className="mt-2 font-display text-4xl tracking-tight text-ink">
-          {m.title}
-        </h1>
-        <div className="titlerule" />
-        <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          {m.brand && <span className="chip">{m.brand}</span>}
-          {m.qualityScore !== null && (
-            <span className="chip text-amber">quality {m.qualityScore}</span>
-          )}
-          {a.style && <span className="chip">{a.style}</span>}
-          {m.tags.map((t) => (
-            <span key={t} className="chip text-faint">
-              #{t}
-            </span>
-          ))}
-          <span className="chip text-faint">{fmtDate(m.createdAt)}</span>
-        </div>
-        {m.sourceRef && (
-          <p className="mt-3 break-all font-mono text-[11px] text-faint">
-            SOURCE · {m.sourceRef}
-          </p>
+      <div className="mt-5">
+        <PageHeader
+          eyebrow={[m.sourceType, m.industry].filter(Boolean).join("  ·  ")}
+          sheet="SHT 02 · DETAIL"
+          title={m.title}
+        />
+      </div>
+
+      <div className="mt-5 flex flex-wrap items-center gap-1.5">
+        {m.brand && <span className="chip">{m.brand}</span>}
+        {m.qualityScore !== null && (
+          <span className="chip text-trace num">quality {m.qualityScore}</span>
         )}
-      </header>
+        {a.style && <span className="chip">{a.style}</span>}
+        {m.tags.map((t) => (
+          <span key={t} className="chip text-faint">
+            #{t}
+          </span>
+        ))}
+        <span className="chip text-faint num">{fmtDate(m.createdAt)}</span>
+      </div>
+      {m.sourceRef && (
+        <p className="mt-3 break-all font-mono text-[11px] text-faint">
+          SOURCE · {m.sourceRef}
+        </p>
+      )}
 
       {a.summary && (
-        <p className="mt-8 max-w-3xl font-display text-xl leading-relaxed text-ink">
+        <p className="mt-9 max-w-3xl text-[19px] leading-relaxed text-ink md:text-[20px]">
           {a.summary}
         </p>
       )}
@@ -173,78 +128,117 @@ export default async function MemoryDetailPage({
             </span>
           ))}
           {a.brandPersonality?.map((p) => (
-            <span key={`p-${p}`} className="chip text-amber">
+            <span key={`p-${p}`} className="chip text-trace">
               {p}
             </span>
           ))}
         </div>
       )}
 
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
+      {/* The specimen itself — the palette, shown first and largest. */}
+      {palette.length > 0 && (
+        <SectionPanel letter="A" title="Palette" className="mt-9">
+          <div
+            className="flex h-11 w-full border border-edge"
+            role="img"
+            aria-label={`Palette spectrum: ${palette.map((c) => c.hex).join(", ")}`}
+          >
+            {palette.map((c, i) => (
+              <span
+                key={`s-${c.hex}-${i}`}
+                title={c.role ? `${c.hex} — ${c.role}` : c.hex}
+                className="h-full flex-1 border-r border-line last:border-r-0"
+                style={{ backgroundColor: c.hex }}
+              />
+            ))}
+          </div>
+          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-4">
+            {palette.map((c, i) => (
+              <div key={`${c.hex}-${i}`} className="w-[86px]">
+                <div
+                  className="h-14 w-full border border-edge"
+                  style={{ backgroundColor: c.hex }}
+                />
+                <p className="mt-1.5 font-mono text-[10.5px] text-dim num">
+                  {c.hex}
+                </p>
+                {c.role && (
+                  <p className="mt-0.5 text-[11.5px] italic leading-tight text-faint">
+                    {c.role}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+          {a.colors?.notes && (
+            <div className="mt-5">
+              <Note>{a.colors.notes}</Note>
+            </div>
+          )}
+        </SectionPanel>
+      )}
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
         {a.spacing && (
-          <Section title="Spacing">
-            <KV label="System" value={a.spacing.system} />
+          <SectionPanel letter="B" title="Spacing">
+            <KV label="System" value={a.spacing.system ?? "—"} />
             <KV
               label="Base unit"
-              value={a.spacing.baseUnit !== null ? `${a.spacing.baseUnit}px` : "—"}
+              value={
+                typeof a.spacing.baseUnit === "number"
+                  ? `${a.spacing.baseUnit}px`
+                  : "—"
+              }
             />
-            <KV label="Section rhythm" value={a.spacing.sectionSpacing} />
+            <KV label="Section rhythm" value={a.spacing.sectionSpacing ?? "—"} />
             {a.spacing.notes && (
               <div className="mt-3">
                 <Note>{a.spacing.notes}</Note>
               </div>
             )}
-          </Section>
+          </SectionPanel>
         )}
 
         {a.typography && (
-          <Section title="Typography">
+          <SectionPanel letter="C" title="Typography">
             <KV label="Heading" value={a.typography.headingFont ?? "—"} />
             <KV label="Body" value={a.typography.bodyFont ?? "—"} />
-            <KV label="Scale" value={a.typography.scale} />
+            <KV label="Scale" value={a.typography.scale ?? "—"} />
             {a.typography.hierarchyNotes && (
               <div className="mt-3">
                 <Note>{a.typography.hierarchyNotes}</Note>
               </div>
             )}
-          </Section>
+          </SectionPanel>
         )}
 
         {a.hierarchy && (
-          <Section title="Hierarchy">
+          <SectionPanel letter="D" title="Hierarchy">
             <KV
               label="Strength"
-              value={
-                <span
-                  className={`font-mono text-xs uppercase tracking-[0.12em] ${LEVEL_COLOR[a.hierarchy.strength] ?? "text-ink"}`}
-                >
-                  {a.hierarchy.strength}
-                </span>
-              }
+              value={<LevelTag level={a.hierarchy.strength ?? "—"} />}
             />
-            {a.hierarchy.focalPoints.length > 0 && (
-              <ul className="mt-3 space-y-1.5">
-                {a.hierarchy.focalPoints.map((f) => (
-                  <li key={f} className="flex gap-2 text-sm text-dim">
-                    <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rotate-45 bg-edge" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
+            {(a.hierarchy.focalPoints?.length ?? 0) > 0 && (
+              <div className="mt-3">
+                <MarkList
+                  items={a.hierarchy.focalPoints ?? []}
+                  marker="slash"
+                />
+              </div>
             )}
             {a.hierarchy.notes && (
               <div className="mt-3">
                 <Note>{a.hierarchy.notes}</Note>
               </div>
             )}
-          </Section>
+          </SectionPanel>
         )}
 
         {a.grid && (
-          <Section title="Grid">
+          <SectionPanel letter="E" title="Grid">
             <KV
               label="Columns"
-              value={a.grid.columns !== null ? a.grid.columns : "—"}
+              value={typeof a.grid.columns === "number" ? a.grid.columns : "—"}
             />
             <KV label="Container" value={a.grid.containerWidth ?? "—"} />
             {a.grid.notes && (
@@ -252,147 +246,115 @@ export default async function MemoryDetailPage({
                 <Note>{a.grid.notes}</Note>
               </div>
             )}
-          </Section>
+          </SectionPanel>
         )}
       </div>
 
       {a.visualRhythm && (
-        <Section title="Visual rhythm" className="mt-4">
+        <SectionPanel letter="F" title="Visual rhythm" className="mt-4">
           <Note>{a.visualRhythm}</Note>
-        </Section>
+        </SectionPanel>
       )}
 
-      {a.colors && a.colors.palette.length > 0 && (
-        <Section title="Palette" className="mt-4">
-          <div className="flex flex-wrap gap-4">
-            {a.colors.palette.map((c, i) => {
-              const hex = normalizeHex(c.hex);
-              return (
-                <div key={`${c.hex}-${i}`} className="w-[76px]">
-                  <div
-                    className="h-12 w-full rounded-md border border-edge"
-                    style={hex ? { backgroundColor: hex } : undefined}
-                  />
-                  <p className="mt-1.5 font-mono text-[10px] text-dim">
-                    {hex ?? c.hex}
-                  </p>
-                  <p className="font-mono text-[10px] leading-tight text-faint">
-                    {c.role}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-          {a.colors.notes && (
-            <div className="mt-4">
-              <Note>{a.colors.notes}</Note>
-            </div>
-          )}
-        </Section>
-      )}
-
-      {a.componentPatterns && a.componentPatterns.length > 0 && (
-        <Section title="Component patterns" className="mt-4">
+      {(a.componentPatterns?.length ?? 0) > 0 && (
+        <SectionPanel letter="G" title="Component patterns" className="mt-4">
           <ul className="divide-y divide-line">
-            {a.componentPatterns.map((cp, i) => (
-              <li key={`${cp.category}-${i}`} className="py-4 first:pt-1 last:pb-1">
-                <span className="chip text-amber">{cp.category}</span>
-                <p className="mt-2 text-sm leading-relaxed text-ink">
+            {a.componentPatterns?.map((cp, i) => (
+              <li
+                key={`${cp.category}-${i}`}
+                className="py-4 first:pt-0 last:pb-0"
+              >
+                <span className="chip text-trace">{cp.category}</span>
+                <p className="mt-2.5 text-[14px] leading-relaxed text-ink">
                   {cp.description}
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-dim">
+                <p className="mt-1 text-[14px] italic leading-relaxed text-dim">
                   {cp.whyItWorks}
                 </p>
               </li>
             ))}
           </ul>
-        </Section>
+        </SectionPanel>
       )}
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         {a.animation && (
-          <Section title="Animation">
+          <SectionPanel letter="H" title="Animation">
             <KV label="Present" value={a.animation.present ? "yes" : "no"} />
-            <KV label="Style" value={a.animation.style} />
+            <KV label="Style" value={a.animation.style ?? "—"} />
             {a.animation.notes && (
               <div className="mt-3">
                 <Note>{a.animation.notes}</Note>
               </div>
             )}
-          </Section>
+          </SectionPanel>
         )}
 
         {a.responsiveness && (
-          <Section title="Responsiveness">
-            <KV label="Approach" value={a.responsiveness.approach} />
+          <SectionPanel letter="I" title="Responsiveness">
+            <KV label="Approach" value={a.responsiveness.approach ?? "—"} />
             {a.responsiveness.notes && (
               <div className="mt-3">
                 <Note>{a.responsiveness.notes}</Note>
               </div>
             )}
-          </Section>
+          </SectionPanel>
         )}
       </div>
 
       {a.accessibility && (
-        <Section title="Accessibility" className="mt-4">
+        <SectionPanel letter="J" title="Accessibility" className="mt-4">
           <KV
             label="Estimated level"
-            value={
-              <span
-                className={`font-mono text-xs uppercase tracking-[0.12em] ${LEVEL_COLOR[a.accessibility.estimatedLevel] ?? "text-ink"}`}
-              >
-                {a.accessibility.estimatedLevel}
-              </span>
-            }
+            value={<LevelTag level={a.accessibility.estimatedLevel ?? "—"} />}
           />
           <div className="mt-4 grid gap-6 sm:grid-cols-2">
             <div>
-              <p className="font-mono text-[10px] tracking-[0.14em] text-sage">
+              <p className="font-mono text-[10px] tracking-[0.16em] text-trace">
                 STRENGTHS
               </p>
-              <ul className="mt-2 space-y-1.5">
-                {a.accessibility.strengths.length === 0 ? (
-                  <li className="text-sm text-faint">None noted</li>
-                ) : (
-                  a.accessibility.strengths.map((s) => (
-                    <li key={s} className="flex gap-2 text-sm text-dim">
-                      <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rotate-45 bg-sage" />
-                      {s}
-                    </li>
-                  ))
-                )}
-              </ul>
+              <div className="mt-2.5">
+                <MarkList
+                  items={a.accessibility.strengths ?? []}
+                  marker="plus"
+                  emptyText="None noted"
+                />
+              </div>
             </div>
             <div>
-              <p className="font-mono text-[10px] tracking-[0.14em] text-rust">
+              <p className="font-mono text-[10px] tracking-[0.16em] text-redline">
                 ISSUES
               </p>
-              <ul className="mt-2 space-y-1.5">
-                {a.accessibility.issues.length === 0 ? (
-                  <li className="text-sm text-faint">None noted</li>
-                ) : (
-                  a.accessibility.issues.map((s) => (
-                    <li key={s} className="flex gap-2 text-sm text-dim">
-                      <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rotate-45 bg-rust" />
-                      {s}
-                    </li>
-                  ))
-                )}
-              </ul>
+              <div className="mt-2.5">
+                <MarkList
+                  items={a.accessibility.issues ?? []}
+                  marker="minus"
+                  emptyText="None noted"
+                />
+              </div>
             </div>
           </div>
-        </Section>
+        </SectionPanel>
       )}
 
-      {a.lessons && a.lessons.length > 0 && (
-        <section className="panel mt-4 border-l-2 border-l-amber p-6">
-          <h2 className="eyebrow text-amber">Lessons for the brain</h2>
-          <ul className="mt-3 space-y-2.5">
-            {a.lessons.map((l) => (
-              <li key={l} className="flex gap-3 text-sm leading-relaxed text-ink">
-                <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rotate-45 bg-amber" />
-                {l}
+      {(a.lessons?.length ?? 0) > 0 && (
+        <section className="mt-4 border border-line border-l-2 border-l-trace bg-panel p-5 md:p-6">
+          <h2 className="eyebrow text-trace">
+            Traced forward — lessons for the brain
+          </h2>
+          <ul className="mt-4 space-y-2.5">
+            {a.lessons?.map((l) => (
+              <li
+                key={l}
+                className="flex gap-3 text-[15px] leading-relaxed text-ink"
+              >
+                <span
+                  className="select-none font-mono text-[13px] leading-[1.5] text-trace"
+                  aria-hidden="true"
+                >
+                  +
+                </span>
+                <span className="min-w-0">{l}</span>
               </li>
             ))}
           </ul>

@@ -47,7 +47,7 @@ export async function listMemories(filters: {
     .from(designMemories)
     .where(industry ? eq(designMemories.industry, industry) : undefined)
     .orderBy(desc(designMemories.createdAt))
-    .limit(filters.limit ?? 20);
+    .limit(Math.min(filters.limit ?? 20, 20));
   return rows.map(toPublicMemory);
 }
 

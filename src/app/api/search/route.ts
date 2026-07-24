@@ -1,10 +1,12 @@
 import { isAuthorized, unauthorized } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/rateLimit";
 import { searchMemory } from "@/lib/engines/retrieval";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   if (!isAuthorized(req)) return unauthorized();
+  { const limited = await enforceRateLimit(req); if (limited) return limited; }
   try {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q")?.trim();

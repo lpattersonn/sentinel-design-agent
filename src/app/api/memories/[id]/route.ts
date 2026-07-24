@@ -1,4 +1,5 @@
 import { isAuthorized, unauthorized } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/rateLimit";
 import { getMemory } from "@/lib/engines/memory";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   if (!isAuthorized(req)) return unauthorized();
+  { const limited = await enforceRateLimit(req); if (limited) return limited; }
   try {
     const { id } = await params;
     const memory = await getMemory(id);

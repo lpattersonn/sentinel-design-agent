@@ -29,7 +29,7 @@ export async function findPatterns(filters: {
   limit?: number;
 }): Promise<PublicPattern[]> {
   const db = getDb();
-  const limit = filters.limit ?? 8;
+  const limit = Math.min(filters.limit ?? 8, 20);
 
   const conditions: SQL[] = [];
   if (filters.category) {

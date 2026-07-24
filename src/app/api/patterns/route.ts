@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import { isAuthorized, unauthorized } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/rateLimit";
 import { findPatterns, upsertPattern } from "@/lib/engines/patterns";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,7 @@ function errorMessage(err: unknown): string {
 
 export async function GET(req: Request) {
   if (!isAuthorized(req)) return unauthorized();
+  { const limited = await enforceRateLimit(req); if (limited) return limited; }
   try {
     const params = new URL(req.url).searchParams;
     const rawLimit = Number(params.get("limit"));
@@ -43,6 +45,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   if (!isAuthorized(req)) return unauthorized();
+  { const limited = await enforceRateLimit(req); if (limited) return limited; }
   try {
     const parsed = PatternUpsertSchema.safeParse(await req.json());
     if (!parsed.success) {

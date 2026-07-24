@@ -122,6 +122,13 @@ export const insights = pgTable(
   ],
 );
 
+// Fixed-window rate limiting: one row per (key fingerprint, hour window).
+export const rateWindows = pgTable("rate_windows", {
+  bucket: text("bucket").primaryKey(), // "<key-fingerprint>:<epoch-hour>"
+  count: integer("count").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type ProjectRow = typeof projects.$inferSelect;
 export type DesignMemoryRow = typeof designMemories.$inferSelect;
 export type NewDesignMemory = typeof designMemories.$inferInsert;

@@ -2,23 +2,21 @@ import type { Metadata } from "next";
 import { desc } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { designScores, type DesignScoreRow } from "@/lib/db/schema";
+import {
+  DIMENSIONS,
+  EmptySheet,
+  Meter,
+  PageHeader,
+  ScoreGlyph,
+  SetupSheet,
+  dimEntry,
+  fmtDate,
+  improvementsOf,
+  verdictOf,
+} from "@/components/sheet";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Scores" };
-
-const DIMENSIONS = [
-  { key: "visualHierarchy", abbr: "HIER", label: "Visual hierarchy" },
-  { key: "accessibility", abbr: "A11Y", label: "Accessibility" },
-  { key: "spacing", abbr: "SPACE", label: "Spacing" },
-  { key: "consistency", abbr: "CONS", label: "Consistency" },
-  { key: "readability", abbr: "READ", label: "Readability" },
-  { key: "conversion", abbr: "CONV", label: "Conversion" },
-  { key: "mobile", abbr: "MOB", label: "Mobile" },
-  { key: "performance", abbr: "PERF", label: "Performance" },
-  { key: "modernDesign", abbr: "MOD", label: "Modern design" },
-  { key: "animation", abbr: "ANIM", label: "Animation" },
-  { key: "componentQuality", abbr: "COMP", label: "Component quality" },
-] as const;
 
 async function loadScores(): Promise<DesignScoreRow[] | null> {
   try {
@@ -33,150 +31,145 @@ async function loadScores(): Promise<DesignScoreRow[] | null> {
   }
 }
 
-function dimScore(scores: unknown, key: string): number | null {
-  if (typeof scores !== "object" || scores === null) return null;
-  const dim = (scores as Record<string, unknown>)[key];
-  if (typeof dim !== "object" || dim === null) return null;
-  const value = (dim as { score?: unknown }).score;
-  return typeof value === "number" ? Math.min(100, Math.max(0, value)) : null;
-}
-
-function verdictOf(scores: unknown): string {
-  if (typeof scores !== "object" || scores === null) return "";
-  const v = (scores as { verdict?: unknown }).verdict;
-  return typeof v === "string" ? v : "";
-}
-
-function fmtDate(d: Date): string {
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function DimensionBars({ scores }: { scores: unknown }) {
-  const summary = DIMENSIONS.map((d) => {
-    const value = dimScore(scores, d.key);
-    return `${d.label} ${value === null ? "not scored" : `${value} of 100`}`;
-  }).join(", ");
-  return (
-    <div className="flex items-end gap-[3px]" role="img" aria-label={summary}>
-      {DIMENSIONS.map((d) => {
-        const value = dimScore(scores, d.key);
-        const height = value === null ? 0 : Math.max(2, Math.round((value / 100) * 30));
-        return (
-          <span
-            key={d.key}
-            className="relative block h-[30px] w-[7px] overflow-hidden rounded-[2px] bg-raised"
-            title={value === null ? `${d.label} — not scored` : `${d.label} ${value}/100`}
-          >
-            {value !== null && (
-              <span
-                className="absolute inset-x-0 bottom-0 block rounded-t-[2px] bg-amber"
-                style={{ height: `${height}px` }}
-              />
-            )}
-          </span>
-        );
-      })}
-    </div>
-  );
-}
-
-function SetupCard() {
-  return (
-    <div className="panel mt-8 max-w-xl p-8">
-      <p className="eyebrow text-amber">Awaiting connection</p>
-      <h2 className="mt-3 font-display text-2xl text-ink">
-        Sentinel is not connected to a database yet
-      </h2>
-      <p className="mt-3 text-sm leading-relaxed text-dim">
-        Point <span className="codechip">DATABASE_URL</span> at your Supabase
-        Postgres (transaction pooler, port 6543), then run{" "}
-        <span className="codechip">npm run db:migrate</span> and{" "}
-        <span className="codechip">npm run seed</span>.
-      </p>
-    </div>
-  );
-}
-
 export default async function ScoresPage() {
   const rows = await loadScores();
 
   return (
     <div>
-      <header>
-        <p className="eyebrow">Eleven-dimension critique</p>
-        <div className="mt-2 flex items-baseline justify-between gap-4">
-          <h1 className="font-display text-4xl tracking-tight text-ink">
-            Scores
-          </h1>
-          {rows && (
-            <span className="font-mono text-[11px] text-faint">
-              {rows.length} RECORDED
-            </span>
-          )}
-        </div>
-        <div className="titlerule" />
-      </header>
+      <PageHeader
+        eyebrow="Eleven-dimension critique"
+        sheet="SHT 04 · CRITIQUE"
+        title="Scores"
+        meta={rows ? `${rows.length} RECORDED` : undefined}
+      />
 
       {!rows ? (
-        <SetupCard />
+        <SetupSheet />
       ) : rows.length === 0 ? (
-        <div className="panel mt-8 max-w-xl p-8">
-          <h2 className="font-display text-xl text-ink">No scores yet</h2>
-          <p className="mt-3 text-sm leading-relaxed text-dim">
-            Call <span className="codechip">score_design</span> over MCP with a
+        <EmptySheet title="No scores yet">
+          <p>
+            Call <code className="codechip">score_design</code> over MCP with a
             URL, HTML, or description to record the first eleven-dimension
             critique.
           </p>
-        </div>
+        </EmptySheet>
       ) : (
         <>
-          <div className="mt-6 flex flex-wrap gap-x-4 gap-y-1">
+          <p className="mt-6 flex flex-wrap gap-x-4 gap-y-1">
             {DIMENSIONS.map((d) => (
               <span key={d.key} className="font-mono text-[10px] text-faint">
                 <span className="text-dim">{d.abbr}</span> {d.label}
               </span>
             ))}
-          </div>
+          </p>
 
           <ul className="mt-6 space-y-3">
             {rows.map((row) => {
               const verdict = verdictOf(row.scores);
+              const improvements = improvementsOf(row.scores);
               return (
-                <li
-                  key={row.id}
-                  className="panel flex flex-col gap-4 p-5 sm:flex-row sm:items-center"
-                >
-                  <div
-                    className="flex shrink-0 items-center gap-4 sm:w-24 sm:flex-col sm:items-start sm:gap-1"
-                    title={`Overall ${row.overall}/100`}
-                  >
-                    <span className="font-display text-4xl leading-none text-ink">
-                      {row.overall}
-                    </span>
-                    <span className="font-mono text-[10px] tracking-[0.18em] text-faint">
-                      OVERALL
-                    </span>
-                  </div>
+                <li key={row.id}>
+                  <details className="scorerow">
+                    <summary className="grid grid-cols-[auto_1fr_auto] items-center gap-4 p-5 sm:grid-cols-[64px_1fr_auto_auto] sm:gap-5">
+                      <span
+                        className="block"
+                        title={`Overall ${row.overall}/100`}
+                      >
+                        <span className="block font-display text-[38px] font-semibold leading-none text-ink num">
+                          {row.overall}
+                        </span>
+                        <span className="mt-1 block font-mono text-[9px] tracking-[0.2em] text-faint">
+                          OVERALL
+                        </span>
+                      </span>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm text-ink">{row.target}</p>
-                    {verdict && (
-                      <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-dim">
-                        {verdict}
-                      </p>
-                    )}
-                    <p className="mt-1.5 font-mono text-[10px] text-faint">
-                      {fmtDate(row.createdAt)}
-                    </p>
-                  </div>
+                      <span className="min-w-0">
+                        <span className="block truncate text-[15px] text-ink">
+                          {row.target}
+                        </span>
+                        {verdict && (
+                          <span className="mt-0.5 block truncate text-[13px] italic leading-relaxed text-dim">
+                            {verdict}
+                          </span>
+                        )}
+                        <span className="mt-1 block font-mono text-[10px] text-faint num">
+                          {fmtDate(row.createdAt)}
+                        </span>
+                      </span>
 
-                  <div className="shrink-0 sm:pl-2">
-                    <DimensionBars scores={row.scores} />
-                  </div>
+                      <span className="hidden sm:block">
+                        <ScoreGlyph scores={row.scores} />
+                      </span>
+
+                      <span className="indicator" aria-hidden="true" />
+                    </summary>
+
+                    <div className="p-5 md:p-6">
+                      <div className="grid gap-x-10 gap-y-5 md:grid-cols-2">
+                        {DIMENSIONS.map((d) => {
+                          const e = dimEntry(row.scores, d.key);
+                          return (
+                            <div key={d.key}>
+                              <div className="flex items-baseline justify-between gap-4">
+                                <span className="font-mono text-[10px] tracking-[0.14em] text-faint">
+                                  <span className="text-trace">{d.abbr}</span>{" "}
+                                  {d.label.toUpperCase()}
+                                </span>
+                                <span className="font-mono text-[12px] text-ink num">
+                                  {e ? e.score : "—"}
+                                </span>
+                              </div>
+                              <div className="mt-1.5">
+                                {e ? (
+                                  <Meter value={e.score} />
+                                ) : (
+                                  <span
+                                    className="meter w-full"
+                                    aria-hidden="true"
+                                  />
+                                )}
+                              </div>
+                              {e?.reasoning && (
+                                <p className="mt-1.5 text-[13px] leading-relaxed text-dim">
+                                  {e.reasoning}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {verdict && (
+                        <div className="mt-7 border-t border-line pt-5">
+                          <p className="eyebrow">Verdict</p>
+                          <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-ink">
+                            {verdict}
+                          </p>
+                        </div>
+                      )}
+
+                      {improvements.length > 0 && (
+                        <div className="mt-6">
+                          <p className="eyebrow text-redline">
+                            Top improvements — ordered by impact
+                          </p>
+                          <ol className="mt-3 space-y-2">
+                            {improvements.map((t, i) => (
+                              <li
+                                key={t}
+                                className="flex gap-3 text-[14px] leading-relaxed text-dim"
+                              >
+                                <span className="shrink-0 font-mono text-[11px] leading-[1.6] text-faint num">
+                                  {String(i + 1).padStart(2, "0")}
+                                </span>
+                                <span className="min-w-0">{t}</span>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
+                    </div>
+                  </details>
                 </li>
               );
             })}
