@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { DISCIPLINE_CORE } from "@/lib/doctrine";
 import {
   ANALYSIS_SYSTEM_PROMPT,
   buildAnalysisMessages,
@@ -40,6 +41,7 @@ import {
  */
 export type ClientBrief = {
   mode: "client-brain";
+  discipline: string;
   task: string;
   instructions: string;
   source?: string;
@@ -113,6 +115,7 @@ export async function analysisBrief(input: AnalyzeInput): Promise<{
   return {
     brief: {
       mode: "client-brain",
+    discipline: DISCIPLINE_CORE,
       task: "Analyze this design and extract structured, transferable design knowledge.",
       instructions: ANALYSIS_SYSTEM_PROMPT,
       source,
@@ -137,6 +140,7 @@ export async function scoreBrief(input: ScoreInput): Promise<ClientBrief> {
     .join(", ");
   return {
     mode: "client-brain",
+    discipline: DISCIPLINE_CORE,
     task: "Score this design on eleven dimensions, 0-100 each, with evidence-based reasoning.",
     instructions: SCORING_SYSTEM_PROMPT,
     source: sourceText,
@@ -157,6 +161,7 @@ export async function bestPracticesBrief(input: {
 }): Promise<ClientBrief> {
   return {
     mode: "client-brain",
+    discipline: DISCIPLINE_CORE,
     task: `Assemble the best-practice bundle for a ${input.pageType}${input.industry ? ` in the ${input.industry} industry` : ""}${input.brandPersonality ? ` with a "${input.brandPersonality}" brand personality` : ""}${input.goals?.length ? ` optimizing for: ${input.goals.join(", ")}` : ""}.`,
     instructions: BUNDLE_SYSTEM_PROMPT,
     context: await gatherContext(input.pageType, input.industry, input.brandPersonality),
@@ -173,6 +178,7 @@ export async function promptBrief(input: {
   const pageType = input.pageType ?? inferPageType(input.prompt);
   return {
     mode: "client-brain",
+    discipline: DISCIPLINE_CORE,
     task: "Rewrite the build prompt below into a design-directed prompt with concrete rules.",
     instructions: PROMPT_SYSTEM_PROMPT,
     source: `Original prompt:\n${input.prompt}`,
@@ -189,6 +195,7 @@ export async function layoutBrief(input: {
 }): Promise<ClientBrief> {
   return {
     mode: "client-brain",
+    discipline: DISCIPLINE_CORE,
     task: `Design the section-by-section layout for a ${input.pageType} in the ${input.industry} industry${input.goals?.length ? `, optimizing for: ${input.goals.join(", ")}` : ""}.`,
     instructions: LAYOUT_SYSTEM_PROMPT,
     context: await gatherContext(input.pageType, input.industry),
@@ -208,6 +215,7 @@ export async function designSystemBrief(input: {
   );
   return {
     mode: "client-brain",
+    discipline: DISCIPLINE_CORE,
     task: `Generate a complete design system for a "${input.brandPersonality}" brand in the ${input.industry} industry${input.inspiration?.length ? `, drawing on: ${input.inspiration.join(", ")}` : ""}.`,
     instructions: DESIGN_SYSTEM_SYSTEM_PROMPT,
     context: [
@@ -226,6 +234,7 @@ export async function designSystemBrief(input: {
 export function insightBrief(feedbackId: string, input: LearnInput): ClientBrief {
   return {
     mode: "client-brain",
+    discipline: DISCIPLINE_CORE,
     task: "Distill this project feedback into a reusable design lesson (or decide it teaches nothing transferable).",
     instructions: INSIGHT_SYSTEM_PROMPT,
     source: [

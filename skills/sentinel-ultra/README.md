@@ -64,3 +64,10 @@ Independent but complementary: Sentinel (the MCP server) supplies **design
 intelligence** — patterns, memories, briefs, scoring. Sentinel Ultra supplies
 **execution discipline** — how the agent works on anything. Run both: Ultra
 governs the process, Sentinel informs the design decisions.
+
+**The doctrine is also served through the MCP connection itself** — no local
+install needed for connected agents: the server's handshake instructions
+teach the workflow, every client-brain brief embeds the discipline core, and
+the `sentinel_ultra` tool returns the full doctrine (or `plan`/`verify`
+slices) on demand. This local skill copy is for agents that aren't connected
+to Sentinel, or for making the discipline apply before a connection exists.

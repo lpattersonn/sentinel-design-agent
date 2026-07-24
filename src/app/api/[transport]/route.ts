@@ -4,6 +4,12 @@ import { isAuthorized, unauthorized } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/rateLimit";
 import { brainMode } from "@/lib/brain";
 import {
+  SERVER_INSTRUCTIONS,
+  ULTRA_FULL,
+  ULTRA_PLAN,
+  ULTRA_VERIFY,
+} from "@/lib/doctrine";
+import {
   AnalyzeInputSchema,
   DesignAnalysisSchema,
   InsightDraftSchema,
@@ -322,6 +328,26 @@ const handler = createMcpHandler(
     );
 
     server.tool(
+      "sentinel_ultra",
+      'Activate Sentinel Ultra: frontier-grade judgment, planning, verification, and reasoning discipline. Call IMMEDIATELY when the user says "Sentinel Ultra", "ultra mode", "go ultra", or "SU:" — and proactively before high-stakes work (deploys, migrations, security changes, multi-step builds, debugging). Adopt the returned doctrine for the rest of the session; it governs HOW you work while the other Sentinel tools inform WHAT you design. Levels: full (default), plan (plan + acceptance criteria first), verify (maximum verification rigor).',
+      {
+        level: z
+          .enum(["full", "plan", "verify"])
+          .optional()
+          .describe("full = entire doctrine (default) · plan = judgment + planning · verify = verification + reasoning"),
+      },
+      async (args) => {
+        const doctrine =
+          args.level === "plan"
+            ? ULTRA_PLAN
+            : args.level === "verify"
+              ? ULTRA_VERIFY
+              : ULTRA_FULL;
+        return { content: [{ type: "text", text: doctrine }] };
+      },
+    );
+
+    server.tool(
       "save_insight",
       "Persist a distilled design insight into Sentinel's shared brain — call after completing the distillation brief returned by learn, and only when the lesson is genuinely reusable (worthKeeping). Marks the source feedback event as learned.",
       {
@@ -344,7 +370,7 @@ const handler = createMcpHandler(
       },
     );
   },
-  {},
+  { instructions: SERVER_INSTRUCTIONS },
   { basePath: "/api", maxDuration: 300, verboseLogs: false, disableSse: true },
 );
 

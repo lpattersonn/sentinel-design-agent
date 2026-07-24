@@ -45,6 +45,7 @@ For local development point at `http://localhost:3000/api/mcp` (no header needed
 | `find_patterns` | `category?`, `industry?`, `query?`, `limit?` | To pick a proven pattern for one section (hero, pricing, cta, testimonials, navigation, cards, forms, dashboard, feature-grid, faq, footer). |
 | `suggest_layout` | `pageType`, `industry`, `goals?` | When starting a page from scratch — ordered sections with pattern slugs and rationale. |
 | `generate_design_system` | `brandPersonality`, `industry`, `inspiration?` | At project kickoff — full token spec: colors, type scale, spacing, radii, shadows, motion. |
+| `sentinel_ultra` | `level?` (full/plan/verify) | When the user says "Sentinel Ultra" / "ultra mode" / "SU:", or before high-stakes work — returns the operating doctrine (judgment, planning, verification, reasoning) to adopt for the session. |
 
 Note: in **server-brain** mode (`ANTHROPIC_API_KEY` set on the server) the LLM-backed tools
 (`analyze_design`, `score_design`, `retrieve_best_practices`, `generate_design_system`,
