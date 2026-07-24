@@ -48,6 +48,9 @@ export type ClientBrief = {
   then: string;
 };
 
+const STALE_TOOLS_HINT =
+  " If the save tool is missing from your tool list, your MCP connection predates it — reconnect to the sentinel server (/mcp → reconnect, or a new session) and it will appear; do not fall back to writing files.";
+
 async function gatherContext(
   pageType: string,
   industry?: string,
@@ -113,7 +116,7 @@ export async function analysisBrief(input: AnalyzeInput): Promise<{
       instructions: ANALYSIS_SYSTEM_PROMPT,
       source,
       outputSchema: z.toJSONSchema(DesignAnalysisSchema),
-      then: `Produce the analysis as a JSON object satisfying outputSchema, then call the save_design_analysis tool with { analysis: <your JSON>, ${JSON.stringify(meta).slice(1, -1)} } so it becomes a permanent design memory.`,
+      then: `Produce the analysis as a JSON object satisfying outputSchema, then call the save_design_analysis tool with { analysis: <your JSON>, ${JSON.stringify(meta).slice(1, -1)} } so it becomes a permanent design memory.${STALE_TOOLS_HINT}`,
     },
     image,
   };
@@ -137,7 +140,7 @@ export async function scoreBrief(input: ScoreInput): Promise<ClientBrief> {
     instructions: SCORING_SYSTEM_PROMPT,
     source: sourceText,
     outputSchema: z.toJSONSchema(ScoreBreakdownSchema),
-    then: `Produce the score breakdown as a JSON object satisfying outputSchema, then call the save_design_score tool with { breakdown: <your JSON>, ${saveArgs} } to record it. Finally, apply the topImprovements to the design.`,
+    then: `Produce the score breakdown as a JSON object satisfying outputSchema, then call the save_design_score tool with { breakdown: <your JSON>, ${saveArgs} } to record it. Finally, apply the topImprovements to the design.${STALE_TOOLS_HINT}`,
   };
 }
 
@@ -236,6 +239,6 @@ export function insightBrief(feedbackId: string, input: LearnInput): ClientBrief
       .filter((line): line is string => line !== null)
       .join("\n"),
     outputSchema: z.toJSONSchema(InsightDraftSchema),
-    then: `If worthKeeping is true, call the save_insight tool with { kind, content, confidence, feedbackId: "${feedbackId}" }. If worthKeeping is false, do nothing further.`,
+    then: `If worthKeeping is true, call the save_insight tool with { kind, content, confidence, feedbackId: "${feedbackId}" }. If worthKeeping is false, do nothing further.${STALE_TOOLS_HINT}`,
   };
 }
