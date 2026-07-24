@@ -1,0 +1,1 @@
+ALTER TABLE "design_memories" ADD COLUMN "confidential" boolean DEFAULT false NOT NULL;

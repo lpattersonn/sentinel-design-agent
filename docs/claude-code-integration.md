@@ -68,6 +68,21 @@ extra tools persist the results, validated against Sentinel's schemas before sto
 Same flywheel, zero server-side LLM cost — quality tracks the connected agent's model.
 `find_patterns`, `search_memory`, and `learn`'s bookkeeping behave identically in both modes.
 
+### Client privacy: agents get the intelligence, never the attribution
+
+Sentinel is built so consuming agents benefit from design thinking without learning which
+client or project it came from:
+
+- Insight rows never expose their `evidence` (project/outcome provenance) through
+  `search_memory` or the REST API — only the distilled lesson travels.
+- Insight distillation is instructed to write lessons with zero project attribution
+  (generalized to industry + page type).
+- Memories saved with `confidential: true` have their identity fields (title, brand,
+  sourceRef) redacted on every agent-facing read, and the analysis is written without
+  naming the client. Public reference sites (Apple, Stripe, …) stay named — that's the
+  useful kind of naming.
+- The dashboard (owner-facing) keeps full attribution for auditing.
+
 ## 3. Make it automatic — CLAUDE.md snippet
 
 Paste this into the `CLAUDE.md` of any project where Claude Code builds UI:
@@ -85,7 +100,9 @@ This project uses the Sentinel design-intelligence server. Follow this workflow 
    order it returns unless the user overrides it.
 3. When the user shares a design they admire (URL, screenshot, Figma link, or
    description): call `analyze_design` to store it, then apply its `lessons` to the
-   current work.
+   current work. When analyzing THIS agency's own client work (rather than a public
+   reference site), pass `confidential: true` and keep the client's name/domain out of
+   the analysis text — Sentinel then redacts its identity from what other projects see.
 4. AFTER completing a page or significant UI change: call `score_design` on the result.
    If the overall score is below 85, apply the `topImprovements` and re-score. Repeat
    until >= 85 or the user says stop. Report the final score and what changed.

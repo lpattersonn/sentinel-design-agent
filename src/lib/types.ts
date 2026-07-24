@@ -73,6 +73,12 @@ export const AnalyzeInputSchema = z.object({
   industry: z.string().optional(),
   brand: z.string().optional(),
   tags: z.array(z.string()).optional(),
+  confidential: z
+    .boolean()
+    .optional()
+    .describe(
+      "Set true when analyzing the agency's own client work: identity fields (title/brand/sourceRef) are redacted on every agent-facing read, and the analysis text must not name the client",
+    ),
 });
 export type AnalyzeInput = z.infer<typeof AnalyzeInputSchema>;
 

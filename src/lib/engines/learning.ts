@@ -26,7 +26,9 @@ const DEFAULT_QUALITY_SCORE = 75;
 
 export const INSIGHT_SYSTEM_PROMPT = `You distill design feedback into reusable knowledge for a design agency's shared brain.
 
-Extract only reusable, generalizable design lessons — principles that would improve future projects for other clients. Set worthKeeping=false for project-specific noise: one-off client preferences, logistics, scope changes, or feedback that teaches nothing transferable.`;
+Extract only reusable, generalizable design lessons — principles that would improve future projects for other clients. Set worthKeeping=false for project-specific noise: one-off client preferences, logistics, scope changes, or feedback that teaches nothing transferable.
+
+Never name the client, project, brand, company, or domain in the lesson content — generalize to industry and page type (e.g. "a hospitality booking page", not the client's name). The lesson must stand alone with zero project attribution, because it will be shown to agents working for other clients.`;
 
 export const MIN_DISTILL_DETAILS_CHARS = 30;
 
@@ -126,10 +128,15 @@ export async function learn(input: LearnInput): Promise<LearnResult> {
         updatedAt: new Date(),
       })
       .where(inArray(designMemories.id, memoryIds))
-      .returning({ title: designMemories.title, score: designMemories.qualityScore });
+      .returning({
+        title: designMemories.title,
+        score: designMemories.qualityScore,
+        confidential: designMemories.confidential,
+      });
     for (const row of rows) {
+      const label = row.confidential ? "confidential memory" : `memory "${row.title}"`;
       adjustments.push(
-        `memory "${row.title}": qualityScore → ${row.score} (${input.outcome} ${signed(delta)})`,
+        `${label}: qualityScore → ${row.score} (${input.outcome} ${signed(delta)})`,
       );
     }
   }

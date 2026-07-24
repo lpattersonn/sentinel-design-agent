@@ -13,14 +13,28 @@ const UUID_RE =
 /** Memory row without its raw embedding vector — safe for API/MCP responses. */
 export type PublicDesignMemory = Omit<DesignMemoryRow, "embedding">;
 
-function stripEmbedding(row: DesignMemoryRow): PublicDesignMemory {
+/**
+ * Agent-facing view of a memory row: the embedding is dropped, and for
+ * confidential client work the identity fields (title, brand, sourceRef) are
+ * redacted so consuming agents get the design intelligence without ever
+ * learning which client/project it came from. The dashboard reads the DB
+ * directly and keeps full attribution.
+ */
+export function toPublicMemory(row: DesignMemoryRow): PublicDesignMemory {
   const { embedding: _omit, ...rest } = row;
-  return rest;
+  if (!rest.confidential) return rest;
+  const style = (rest.analysis as { style?: string } | null)?.style ?? "Design study";
+  return {
+    ...rest,
+    title: `${style} — confidential client work${rest.industry ? ` (${rest.industry})` : ""}`,
+    brand: null,
+    sourceRef: null,
+  };
 }
 
 export async function saveMemory(row: NewDesignMemory): Promise<PublicDesignMemory> {
   const [saved] = await getDb().insert(designMemories).values(row).returning();
-  return stripEmbedding(saved);
+  return toPublicMemory(saved);
 }
 
 export async function listMemories(filters: {
@@ -34,7 +48,7 @@ export async function listMemories(filters: {
     .where(industry ? eq(designMemories.industry, industry) : undefined)
     .orderBy(desc(designMemories.createdAt))
     .limit(filters.limit ?? 20);
-  return rows.map(stripEmbedding);
+  return rows.map(toPublicMemory);
 }
 
 export async function getMemory(id: string): Promise<PublicDesignMemory | null> {
@@ -45,5 +59,5 @@ export async function getMemory(id: string): Promise<PublicDesignMemory | null> 
     .from(designMemories)
     .where(eq(designMemories.id, id))
     .limit(1);
-  return row ? stripEmbedding(row) : null;
+  return row ? toPublicMemory(row) : null;
 }

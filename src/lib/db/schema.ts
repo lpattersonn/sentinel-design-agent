@@ -42,6 +42,9 @@ export const designMemories = pgTable(
     summary: text("summary").notNull(),
     traits: jsonb("traits").$type<string[]>().notNull().default([]),
     qualityScore: integer("quality_score"), // 0-100, adjusted by the learning engine
+    // Client-work memories: identity (title/brand/sourceRef) is redacted on every
+    // agent-facing read path; only the dashboard sees full attribution.
+    confidential: boolean("confidential").notNull().default(false),
     embedding: vector("embedding", { dimensions: EMBEDDING_DIM }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

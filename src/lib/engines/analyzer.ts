@@ -131,15 +131,19 @@ async function tryFetchImage(
   }
 }
 
+const CONFIDENTIAL_NOTE =
+  "CONFIDENTIAL CLIENT WORK: never name the client, brand, product, company, or domain anywhere in the analysis text — summary, notes, component descriptions, and lessons included. Refer to it generically (e.g. 'this hospitality booking page'). The analysis must be fully valuable with zero knowledge of whose project it is.";
+
 function contextLines(input: AnalyzeInput): string {
   const lines: string[] = [];
   if (input.title) lines.push(`Title: ${input.title}`);
   if (input.brand) lines.push(`Brand: ${input.brand}`);
   if (input.industry) lines.push(`Industry: ${input.industry}`);
   if (input.tags?.length) lines.push(`Tags: ${input.tags.join(", ")}`);
-  return lines.length > 0
-    ? `Context provided by the requester:\n${lines.join("\n")}`
-    : "";
+  const parts: string[] = [];
+  if (lines.length > 0) parts.push(`Context provided by the requester:\n${lines.join("\n")}`);
+  if (input.confidential) parts.push(CONFIDENTIAL_NOTE);
+  return parts.join("\n\n");
 }
 
 function htmlSourceText(intro: string, html: string, context: string): string {
@@ -281,6 +285,7 @@ export type AnalysisMeta = {
   industry?: string;
   brand?: string;
   tags?: string[];
+  confidential?: boolean;
 };
 
 function metaSourceLabel(meta: AnalysisMeta): string {
@@ -323,6 +328,7 @@ export async function persistAnalysis(
     analysis,
     summary: analysis.summary,
     traits: analysis.traits,
+    confidential: meta.confidential ?? false,
     embedding,
   };
 
@@ -356,6 +362,7 @@ export async function analyzeDesign(input: AnalyzeInput): Promise<AnalyzeResult>
       industry: input.industry,
       brand: input.brand,
       tags: input.tags,
+      confidential: input.confidential,
     },
     analysis,
   );

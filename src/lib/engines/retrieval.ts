@@ -9,8 +9,9 @@ import {
   sql,
 } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { designMemories, insights } from "@/lib/db/schema";
+import { designMemories, insights, type InsightRow } from "@/lib/db/schema";
 import { embedOne } from "@/lib/ai/embeddings";
+import { toPublicMemory } from "@/lib/engines/memory";
 import { normalizeIndustry } from "@/lib/normalize";
 import type { SearchHit } from "@/lib/types";
 
@@ -25,11 +26,13 @@ function snippet(text: string): string {
   return `${text.slice(0, SNIPPET_LENGTH - 1).trimEnd()}…`;
 }
 
-/** Drop the raw 1536-dim embedding before a row rides along in SearchHit.data. */
-function stripEmbedding<T extends { embedding: unknown }>(
-  row: T,
-): Omit<T, "embedding"> {
-  const { embedding: _omit, ...rest } = row;
+/**
+ * Agent-facing view of an insight: no raw embedding, and no `evidence` — that
+ * field carries the client/project name the insight was learned from, which is
+ * attribution agents must never see. The lesson content is what travels.
+ */
+function toPublicInsight(row: InsightRow): Omit<InsightRow, "embedding" | "evidence"> {
+  const { embedding: _e, evidence: _v, ...rest } = row;
   return rest;
 }
 
@@ -94,21 +97,24 @@ async function vectorSearch(
   ]);
 
   return [
-    ...memoryRows.map(({ row, similarity }): SearchHit => ({
-      kind: "memory",
-      id: row.id,
-      title: row.title,
-      snippet: snippet(row.summary),
-      score: Number(similarity),
-      data: stripEmbedding(row),
-    })),
+    ...memoryRows.map(({ row, similarity }): SearchHit => {
+      const pub = toPublicMemory(row);
+      return {
+        kind: "memory",
+        id: row.id,
+        title: pub.title,
+        snippet: snippet(row.summary),
+        score: Number(similarity),
+        data: pub,
+      };
+    }),
     ...insightRows.map(({ row, similarity }): SearchHit => ({
       kind: "insight",
       id: row.id,
       title: `Insight: ${row.kind}`,
       snippet: snippet(row.content),
       score: Number(similarity),
-      data: stripEmbedding(row),
+      data: toPublicInsight(row),
     })),
   ];
 }
@@ -161,21 +167,24 @@ async function keywordSearch(
   };
 
   return [
-    ...memoryRows.map((row): SearchHit => ({
-      kind: "memory",
-      id: row.id,
-      title: row.title,
-      snippet: snippet(row.summary),
-      score: keywordScore(`${row.title} ${row.summary}`),
-      data: stripEmbedding(row),
-    })),
+    ...memoryRows.map((row): SearchHit => {
+      const pub = toPublicMemory(row);
+      return {
+        kind: "memory",
+        id: row.id,
+        title: pub.title,
+        snippet: snippet(row.summary),
+        score: keywordScore(`${row.title} ${row.summary}`),
+        data: pub,
+      };
+    }),
     ...insightRows.map((row): SearchHit => ({
       kind: "insight",
       id: row.id,
       title: `Insight: ${row.kind}`,
       snippet: snippet(row.content),
       score: keywordScore(row.content),
-      data: stripEmbedding(row),
+      data: toPublicInsight(row),
     })),
   ];
 }

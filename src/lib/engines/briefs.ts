@@ -107,6 +107,7 @@ export async function analysisBrief(input: AnalyzeInput): Promise<{
     ...(input.industry ? { industry: input.industry } : {}),
     ...(input.brand ? { brand: input.brand } : {}),
     ...(input.tags?.length ? { tags: input.tags } : {}),
+    ...(input.confidential ? { confidential: true } : {}),
   };
 
   return {

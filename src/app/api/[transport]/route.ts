@@ -286,6 +286,12 @@ const handler = createMcpHandler(
         industry: z.string().optional(),
         brand: z.string().optional(),
         tags: z.array(z.string()).optional(),
+        confidential: z
+          .boolean()
+          .optional()
+          .describe(
+            "true when this is the agency's own client work — identity is then redacted on every agent-facing read; keep client names out of the analysis text itself",
+          ),
       },
       async (args) => {
         try {
