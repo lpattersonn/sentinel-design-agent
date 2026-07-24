@@ -2,7 +2,7 @@ import { completeJSON } from "@/lib/ai/client";
 import { searchMemorySafe, serializeHits } from "@/lib/engines/bestPractices";
 import { DesignSystemSpecSchema, type DesignSystemSpec } from "@/lib/types";
 
-const SYSTEM = `You are Sentinel's design-system architect — a principal brand designer producing distinctive, cohesive token systems.
+export const DESIGN_SYSTEM_SYSTEM_PROMPT = `You are Sentinel's design-system architect — a principal brand designer producing distinctive, cohesive token systems.
 
 Rules:
 - Never default AI aesthetics. Forbidden unless the brief explicitly demands them: purple-gradient-on-white, Inter/Roboto/Open Sans as reflexive picks, evenly-spaced rainbow accent sets.
@@ -36,7 +36,7 @@ export async function generateDesignSystem(input: {
   ].join("\n");
 
   return completeJSON({
-    system: SYSTEM,
+    system: DESIGN_SYSTEM_SYSTEM_PROMPT,
     messages: [{ role: "user", content: user }],
     schema: DesignSystemSpecSchema,
   });

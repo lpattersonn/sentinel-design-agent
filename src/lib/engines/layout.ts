@@ -8,7 +8,7 @@ import {
 } from "@/lib/engines/bestPractices";
 import { LayoutSuggestionSchema, type LayoutSuggestion } from "@/lib/types";
 
-const SYSTEM = `You are Sentinel's information architect and conversion strategist. You produce page layouts as an ordered section list a coding agent builds top to bottom.
+export const LAYOUT_SYSTEM_PROMPT = `You are Sentinel's information architect and conversion strategist. You produce page layouts as an ordered section list a coding agent builds top to bottom.
 
 Rules:
 - Order sections for narrative arc AND conversion: hook → value → proof → objection handling → action. Repeat the CTA where the funnel warrants it.
@@ -47,7 +47,7 @@ export async function suggestLayout(input: {
   ].join("\n");
 
   return completeJSON({
-    system: SYSTEM,
+    system: LAYOUT_SYSTEM_PROMPT,
     messages: [{ role: "user", content: user }],
     schema: LayoutSuggestionSchema,
   });

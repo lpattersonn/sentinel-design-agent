@@ -46,9 +46,27 @@ For local development point at `http://localhost:3000/api/mcp` (no header needed
 | `suggest_layout` | `pageType`, `industry`, `goals?` | When starting a page from scratch — ordered sections with pattern slugs and rationale. |
 | `generate_design_system` | `brandPersonality`, `industry`, `inspiration?` | At project kickoff — full token spec: colors, type scale, spacing, radii, shadows, motion. |
 
-Note: LLM-backed tools (`analyze_design`, `score_design`, `retrieve_best_practices`,
-`generate_design_system`, `suggest_layout`, `improve_prompt`) take 20–60 s on the default
-model. See [deploy.md](deploy.md#function-timeouts) if calls time out.
+Note: in **server-brain** mode (`ANTHROPIC_API_KEY` set on the server) the LLM-backed tools
+(`analyze_design`, `score_design`, `retrieve_best_practices`, `generate_design_system`,
+`suggest_layout`, `improve_prompt`) take 20–60 s on the default model. See
+[deploy.md](deploy.md#function-timeouts) if calls time out.
+
+### Client-brain mode (no server API key)
+
+When the server has no `ANTHROPIC_API_KEY` (or `SENTINEL_BRAIN=client`), the six LLM-backed
+tools return a **brief** instead of a finished result: prepared source material, expert
+instructions, and a JSON schema for the output. The connected agent — the Claude session
+you're already in — does the reasoning itself and follows the brief's `then` field. Three
+extra tools persist the results, validated against Sentinel's schemas before storage:
+
+| Tool | Persists |
+|---|---|
+| `save_design_analysis` | A completed `DesignAnalysis` (+ source metadata) as a design memory |
+| `save_design_score` | A completed 11-dimension `ScoreBreakdown` |
+| `save_insight` | A distilled lesson from a `learn` distillation brief |
+
+Same flywheel, zero server-side LLM cost — quality tracks the connected agent's model.
+`find_patterns`, `search_memory`, and `learn`'s bookkeeping behave identically in both modes.
 
 ## 3. Make it automatic — CLAUDE.md snippet
 

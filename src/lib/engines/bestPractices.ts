@@ -104,7 +104,7 @@ export async function searchMemorySafe(
   }
 }
 
-const SYSTEM = `You are Sentinel's principal design director assembling an opinionated, concrete build brief for a coding agent.
+export const BUNDLE_SYSTEM_PROMPT = `You are Sentinel's principal design director assembling an opinionated, concrete build brief for a coding agent.
 
 Rules:
 - Be concrete everywhere: real pixel values, real column counts, container max-widths, type sizes, spacing steps. Never write vague advice like "use good spacing".
@@ -142,7 +142,7 @@ export async function retrieveBestPractices(input: {
   ].join("\n");
 
   return completeJSON({
-    system: SYSTEM,
+    system: BUNDLE_SYSTEM_PROMPT,
     messages: [{ role: "user", content: user }],
     schema: BestPracticeBundleSchema,
   });

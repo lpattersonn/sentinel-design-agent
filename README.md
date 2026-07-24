@@ -88,7 +88,8 @@ claude mcp add --transport http sentinel http://localhost:3000/api/mcp \
 | Variable | Required | Purpose |
 |---|---|---|
 | `DATABASE_URL` | yes | Supabase Postgres, transaction-pooler URL (port 6543). |
-| `ANTHROPIC_API_KEY` | yes | Powers analysis, scoring, prompt building, learning. |
+| `ANTHROPIC_API_KEY` | no | Enables **server-brain** mode: Sentinel runs analysis, scoring, prompt building and insight distillation itself. Without it, Sentinel runs in **client-brain** mode — the LLM tools return briefs (prepared source + instructions + JSON schema) that the connected agent's own model completes, persisting results via the `save_design_analysis` / `save_design_score` / `save_insight` tools. |
+| `SENTINEL_BRAIN` | no | `server` \| `client` \| `auto` (default). `auto` picks server when `ANTHROPIC_API_KEY` is set, client otherwise. |
 | `SENTINEL_API_KEY` | production | Shared secret for MCP + REST (`Authorization: Bearer …`). Unset = open access, local dev only. |
 | `SENTINEL_MODEL` | no | Model override. Default `claude-opus-4-8`; use `claude-sonnet-5` or `claude-haiku-4-5` for lower latency. |
 | `OPENAI_API_KEY` | no | Enables vector (semantic) retrieval via `text-embedding-3-small`. Without it Sentinel falls back to keyword search — everything still works. |

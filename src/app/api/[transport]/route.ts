@@ -1,22 +1,51 @@
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod/v4";
 import { isAuthorized, unauthorized } from "@/lib/auth";
-import { AnalyzeInputSchema, LearnInputSchema } from "@/lib/types";
-import { analyzeDesign } from "@/lib/engines/analyzer";
+import { brainMode } from "@/lib/brain";
+import {
+  AnalyzeInputSchema,
+  DesignAnalysisSchema,
+  InsightDraftSchema,
+  LearnInputSchema,
+  ScoreBreakdownSchema,
+} from "@/lib/types";
+import { analyzeDesign, persistAnalysis } from "@/lib/engines/analyzer";
 import { findPatterns } from "@/lib/engines/patterns";
 import { retrieveBestPractices } from "@/lib/engines/bestPractices";
-import { scoreDesign } from "@/lib/engines/scorer";
+import { persistScore, scoreDesign } from "@/lib/engines/scorer";
 import { improvePrompt } from "@/lib/engines/promptBuilder";
-import { learn } from "@/lib/engines/learning";
+import {
+  MIN_DISTILL_DETAILS_CHARS,
+  learn,
+  persistInsight,
+} from "@/lib/engines/learning";
 import { searchMemory } from "@/lib/engines/retrieval";
 import { suggestLayout } from "@/lib/engines/layout";
 import { generateDesignSystem } from "@/lib/engines/designSystem";
+import {
+  analysisBrief,
+  bestPracticesBrief,
+  designSystemBrief,
+  insightBrief,
+  layoutBrief,
+  promptBrief,
+  scoreBrief,
+  type ClientBrief,
+} from "@/lib/engines/briefs";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
+// Resolved once per process — SENTINEL_BRAIN / ANTHROPIC_API_KEY are fixed per deploy.
+const MODE = brainMode();
+const CLIENT = MODE === "client";
+
+type ContentBlock =
+  | { type: "text"; text: string }
+  | { type: "image"; data: string; mimeType: string };
+
 type ToolResult = {
-  content: { type: "text"; text: string }[];
+  content: ContentBlock[];
   isError?: boolean;
 };
 
@@ -24,19 +53,39 @@ function ok(result: unknown): ToolResult {
   return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
 }
 
+function okBrief(
+  brief: ClientBrief,
+  image?: { data: string; mimeType: string },
+): ToolResult {
+  const content: ContentBlock[] = [
+    { type: "text", text: JSON.stringify(brief, null, 2) },
+  ];
+  if (image) content.push({ type: "image", data: image.data, mimeType: image.mimeType });
+  return { content };
+}
+
 function fail(err: unknown): ToolResult {
   const message = err instanceof Error ? err.message : String(err);
   return { content: [{ type: "text", text: "Error: " + message }], isError: true };
 }
 
+/** Server-brain tools finish the work; client-brain tools brief the caller. */
+const briefNote =
+  " NOTE (client-brain mode): this tool returns a BRIEF — prepared source material, instructions, and a JSON output schema. YOU perform the reasoning, following the brief exactly, then do what its `then` field says.";
+
 const handler = createMcpHandler(
   (server) => {
     server.tool(
       "analyze_design",
-      "Analyze a design from a URL, raw HTML, screenshot (base64), Figma link, or textual description. Extracts spacing system, typography, hierarchy, grid, colors, component patterns, accessibility level, and transferable lessons, then stores the result in Sentinel's design memory. Call this whenever you encounter a well-designed page or asset worth learning from — the analysis compounds into better future recommendations.",
+      "Analyze a design from a URL, raw HTML, screenshot (base64), Figma link, or textual description. Extracts spacing system, typography, hierarchy, grid, colors, component patterns, accessibility level, and transferable lessons, then stores the result in Sentinel's design memory. Call this whenever you encounter a well-designed page or asset worth learning from — the analysis compounds into better future recommendations." +
+        (CLIENT ? briefNote + " Persist your analysis via save_design_analysis." : ""),
       AnalyzeInputSchema.shape,
       async (args) => {
         try {
+          if (CLIENT) {
+            const { brief, image } = await analysisBrief(args);
+            return okBrief(brief, image);
+          }
           return ok(await analyzeDesign(args));
         } catch (err) {
           return fail(err);
@@ -67,7 +116,8 @@ const handler = createMcpHandler(
 
     server.tool(
       "retrieve_best_practices",
-      "Call BEFORE building any page or UI section. Returns a complete best-practice bundle for the page type: hero and CTA recommendations, typography direction, concrete spacing rules, grid spec, color system, per-component recommendations, interaction rules, accessibility notes, and a ready-to-use promptEnhancement block of design directives — all grounded in Sentinel's learned patterns and memories. Skipping this call means building without the accumulated design intelligence.",
+      "Call BEFORE building any page or UI section. Returns a complete best-practice bundle for the page type: hero and CTA recommendations, typography direction, concrete spacing rules, grid spec, color system, per-component recommendations, interaction rules, accessibility notes, and a ready-to-use promptEnhancement block of design directives — all grounded in Sentinel's learned patterns and memories. Skipping this call means building without the accumulated design intelligence." +
+        (CLIENT ? briefNote + " Assemble the bundle yourself from the provided CONTEXT, then follow it while building." : ""),
       {
         pageType: z
           .string()
@@ -81,6 +131,7 @@ const handler = createMcpHandler(
       },
       async (args) => {
         try {
+          if (CLIENT) return okBrief(await bestPracticesBrief(args));
           return ok(await retrieveBestPractices(args));
         } catch (err) {
           return fail(err);
@@ -90,7 +141,8 @@ const handler = createMcpHandler(
 
     server.tool(
       "score_design",
-      "Score a design you just built (or found) on 11 dimensions — visual hierarchy, accessibility, spacing, consistency, readability, conversion, mobile, performance, modern design, animation, component quality — each 0-100 with reasoning, plus an overall verdict and ordered top improvements. Call AFTER producing any page or significant UI section to catch weaknesses before the user sees them, then apply the top improvements. Provide html, a url, or a description (at least one).",
+      "Score a design you just built (or found) on 11 dimensions — visual hierarchy, accessibility, spacing, consistency, readability, conversion, mobile, performance, modern design, animation, component quality — each 0-100 with reasoning, plus an overall verdict and ordered top improvements. Call AFTER producing any page or significant UI section to catch weaknesses before the user sees them, then apply the top improvements. Provide html, a url, or a description (at least one)." +
+        (CLIENT ? briefNote + " Persist your breakdown via save_design_score." : ""),
       {
         html: z.string().optional().describe("Raw HTML of the design to score"),
         url: z.string().optional().describe("URL of a live page to fetch and score"),
@@ -103,6 +155,7 @@ const handler = createMcpHandler(
       },
       async (args) => {
         try {
+          if (CLIENT) return okBrief(await scoreBrief(args));
           return ok(await scoreDesign(args));
         } catch (err) {
           return fail(err);
@@ -112,7 +165,8 @@ const handler = createMcpHandler(
 
     server.tool(
       "improve_prompt",
-      "Rewrite a build prompt into a design-directed one. Call BEFORE acting on any user request to build UI: pass the raw request and get back an enhanced prompt layered with concrete design rules (spacing in px, grid spec, named fonts, color anchors, motion, accessibility), the discrete rules injected, and the inspiration drawn on. Then follow the enhanced prompt instead of the original.",
+      "Rewrite a build prompt into a design-directed one. Call BEFORE acting on any user request to build UI: pass the raw request and get back an enhanced prompt layered with concrete design rules (spacing in px, grid spec, named fonts, color anchors, motion, accessibility), the discrete rules injected, and the inspiration drawn on. Then follow the enhanced prompt instead of the original." +
+        (CLIENT ? briefNote + " Produce the enhancement yourself, then execute your enhancedPrompt." : ""),
       {
         prompt: z.string().describe("The original build prompt or user request, verbatim"),
         pageType: z
@@ -123,6 +177,7 @@ const handler = createMcpHandler(
       },
       async (args) => {
         try {
+          if (CLIENT) return okBrief(await promptBrief(args));
           return ok(await improvePrompt(args));
         } catch (err) {
           return fail(err);
@@ -132,11 +187,22 @@ const handler = createMcpHandler(
 
     server.tool(
       "learn",
-      "Record a project outcome so Sentinel gets smarter. Call whenever a design outcome is known — the client accepted it, requested revisions, it converted, or it was rejected. Adjusts the scores of the patterns and memories that informed the work and distills durable insights from substantive feedback. This is the feedback loop: unreported outcomes are lessons lost.",
+      "Record a project outcome so Sentinel gets smarter. Call whenever a design outcome is known — the client accepted it, requested revisions, it converted, or it was rejected. Adjusts the scores of the patterns and memories that informed the work and distills durable insights from substantive feedback. This is the feedback loop: unreported outcomes are lessons lost." +
+        (CLIENT
+          ? " NOTE (client-brain mode): the feedback and score adjustments are recorded immediately; when the response includes a distillation brief, YOU distill the insight and persist it via save_insight."
+          : ""),
       LearnInputSchema.shape,
       async (args) => {
         try {
-          return ok(await learn(args));
+          const result = await learn(args);
+          const details = args.details?.trim() ?? "";
+          if (CLIENT && details.length > MIN_DISTILL_DETAILS_CHARS) {
+            return ok({
+              ...result,
+              distillation: insightBrief(result.feedbackId, args),
+            });
+          }
+          return ok(result);
         } catch (err) {
           return fail(err);
         }
@@ -162,7 +228,8 @@ const handler = createMcpHandler(
 
     server.tool(
       "suggest_layout",
-      "Get a complete page layout before writing any markup: an ordered section list (each with description, rationale, and a proven pattern slug where one applies), grid spec, navigation structure, mobile behavior, and the conversion levers the layout pulls. Call at the START of building any full page — build the sections top to bottom in the returned order.",
+      "Get a complete page layout before writing any markup: an ordered section list (each with description, rationale, and a proven pattern slug where one applies), grid spec, navigation structure, mobile behavior, and the conversion levers the layout pulls. Call at the START of building any full page — build the sections top to bottom in the returned order." +
+        (CLIENT ? briefNote + " Produce the layout yourself, then build it top to bottom." : ""),
       {
         pageType: z.string().describe("e.g. 'landing page', 'pricing page', 'product page'"),
         industry: z.string().describe("Target industry, e.g. 'saas', 'ecommerce'"),
@@ -170,6 +237,7 @@ const handler = createMcpHandler(
       },
       async (args) => {
         try {
+          if (CLIENT) return okBrief(await layoutBrief(args));
           return ok(await suggestLayout(args));
         } catch (err) {
           return fail(err);
@@ -179,7 +247,8 @@ const handler = createMcpHandler(
 
     server.tool(
       "generate_design_system",
-      "Generate a complete, brand-specific design system: color tokens with hex values and usage, heading/body fonts with a full type scale, spacing scale, radii, shadows, motion (durations, easing, principles), and per-component guidelines. Call at the start of any new project or when a design lacks a coherent system — then apply the tokens consistently instead of inventing values ad hoc.",
+      "Generate a complete, brand-specific design system: color tokens with hex values and usage, heading/body fonts with a full type scale, spacing scale, radii, shadows, motion (durations, easing, principles), and per-component guidelines. Call at the start of any new project or when a design lacks a coherent system — then apply the tokens consistently instead of inventing values ad hoc." +
+        (CLIENT ? briefNote + " Produce the system yourself, then apply its tokens consistently." : ""),
       {
         brandPersonality: z
           .string()
@@ -192,7 +261,76 @@ const handler = createMcpHandler(
       },
       async (args) => {
         try {
+          if (CLIENT) return okBrief(await designSystemBrief(args));
           return ok(await generateDesignSystem(args));
+        } catch (err) {
+          return fail(err);
+        }
+      },
+    );
+
+    // -----------------------------------------------------------------------
+    // Persistence tools — the write-back half of client-brain mode. Registered
+    // in both modes; Sentinel validates every payload against its schemas, so
+    // malformed results are rejected rather than stored.
+    // -----------------------------------------------------------------------
+
+    server.tool(
+      "save_design_analysis",
+      "Persist a completed DesignAnalysis into Sentinel's design memory. Call after completing the analysis from an analyze_design brief. The analysis is validated against Sentinel's schema; pass the source metadata you were given in the brief.",
+      {
+        analysis: DesignAnalysisSchema,
+        sourceType: AnalyzeInputSchema.shape.sourceType,
+        sourceRef: z.string().optional().describe("Original URL or Figma link when applicable"),
+        title: z.string().optional().describe("Human-readable memory title"),
+        industry: z.string().optional(),
+        brand: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+      },
+      async (args) => {
+        try {
+          const { analysis, ...meta } = args;
+          return ok(await persistAnalysis(meta, analysis));
+        } catch (err) {
+          return fail(err);
+        }
+      },
+    );
+
+    server.tool(
+      "save_design_score",
+      "Persist a completed 11-dimension ScoreBreakdown produced from a score_design brief. Validated against Sentinel's schema before storage.",
+      {
+        breakdown: ScoreBreakdownSchema,
+        target: z.string().describe("The target label from the brief (url / description excerpt)"),
+        projectId: z.string().optional().describe("Sentinel project id to attach this score to"),
+      },
+      async (args) => {
+        try {
+          return ok(await persistScore(args.breakdown, args.target, args.projectId));
+        } catch (err) {
+          return fail(err);
+        }
+      },
+    );
+
+    server.tool(
+      "save_insight",
+      "Persist a distilled design insight into Sentinel's shared brain — call after completing the distillation brief returned by learn, and only when the lesson is genuinely reusable (worthKeeping). Marks the source feedback event as learned.",
+      {
+        kind: InsightDraftSchema.shape.kind,
+        content: z.string().min(10).describe("The distilled, reusable lesson in 1-3 sentences"),
+        confidence: z.number().min(0).max(1),
+        feedbackId: z.string().optional().describe("The feedbackId from the learn result"),
+      },
+      async (args) => {
+        try {
+          return ok(
+            await persistInsight(
+              { kind: args.kind, content: args.content, confidence: args.confidence },
+              { feedbackId: args.feedbackId },
+            ),
+          );
         } catch (err) {
           return fail(err);
         }

@@ -17,7 +17,7 @@ const MAX_STRUCTURAL_HTML_CHARS = 50_000;
 const MAX_VISIBLE_TEXT_CHARS = 8_000;
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 
-const SYSTEM_PROMPT = `You are a world-class design director who extracts structured, transferable design knowledge from designs.
+export const ANALYSIS_SYSTEM_PROMPT = `You are a world-class design director who extracts structured, transferable design knowledge from designs.
 
 From the provided source (HTML, visible text, a screenshot, a link, or a written description), produce a rigorous analysis covering: the spacing system (base unit, vertical rhythm between sections), the type scale and hierarchy, grid and container, how the eye moves through the page, the color palette with the role each color plays, component patterns with a clear account of why each one works, animation, accessibility, responsiveness, short memorable traits, and transferable lessons.
 
@@ -180,7 +180,9 @@ function textMessage(text: string): Anthropic.MessageParam[] {
   return [{ role: "user", content: text }];
 }
 
-async function buildMessages(input: AnalyzeInput): Promise<Anthropic.MessageParam[]> {
+export async function buildAnalysisMessages(
+  input: AnalyzeInput,
+): Promise<Anthropic.MessageParam[]> {
   const context = contextLines(input);
 
   switch (input.sourceType) {
@@ -272,35 +274,52 @@ function deriveTitle(input: AnalyzeInput, analysis: DesignAnalysis): string {
   return `${analysis.style} — ${sourceLabel(input)}`;
 }
 
-export async function analyzeDesign(input: AnalyzeInput): Promise<AnalyzeResult> {
+export type AnalysisMeta = {
+  sourceType: AnalyzeInput["sourceType"];
+  sourceRef?: string | null;
+  title?: string;
+  industry?: string;
+  brand?: string;
+  tags?: string[];
+};
+
+function metaSourceLabel(meta: AnalysisMeta): string {
+  if (meta.sourceType === "url" && meta.sourceRef) {
+    try {
+      return new URL(meta.sourceRef).hostname;
+    } catch {
+      return "web page";
+    }
+  }
+  return sourceLabel({ sourceType: meta.sourceType, content: meta.sourceRef ?? "" });
+}
+
+/**
+ * Persist a completed DesignAnalysis as a design memory. Shared by the
+ * server-brain analyzeDesign flow and the client-brain save_design_analysis
+ * tool (where the connected agent produced the analysis).
+ */
+export async function persistAnalysis(
+  meta: AnalysisMeta,
+  analysis: DesignAnalysis,
+): Promise<{ memoryId: string }> {
   if (!isDbConfigured()) {
     throw new Error(
-      "DATABASE_URL is not set — analysis would be computed but could not be saved. Configure Supabase first.",
+      "DATABASE_URL is not set — the analysis cannot be saved. Configure Supabase first.",
     );
   }
-
-  const messages = await buildMessages(input);
-
-  const analysis = await completeJSON({
-    system: SYSTEM_PROMPT,
-    messages,
-    schema: DesignAnalysisSchema,
-  });
 
   const embedding = await embedOne(
     `${analysis.summary} ${analysis.traits.join(", ")} ${analysis.style}`,
   );
 
   const row: NewDesignMemory = {
-    title: input.title ?? deriveTitle(input, analysis),
-    sourceType: input.sourceType,
-    sourceRef:
-      input.sourceType === "url" || input.sourceType === "figma"
-        ? input.content
-        : null,
-    industry: normalizeIndustry(input.industry ?? analysis.industry),
-    brand: input.brand ?? null,
-    tags: input.tags ?? [],
+    title: meta.title ?? `${analysis.style} — ${metaSourceLabel(meta)}`,
+    sourceType: meta.sourceType,
+    sourceRef: meta.sourceRef ?? null,
+    industry: normalizeIndustry(meta.industry ?? analysis.industry),
+    brand: meta.brand ?? null,
+    tags: meta.tags ?? [],
     analysis,
     summary: analysis.summary,
     traits: analysis.traits,
@@ -308,5 +327,37 @@ export async function analyzeDesign(input: AnalyzeInput): Promise<AnalyzeResult>
   };
 
   const saved = await saveMemory(row);
-  return { memoryId: saved.id, analysis };
+  return { memoryId: saved.id };
+}
+
+export async function analyzeDesign(input: AnalyzeInput): Promise<AnalyzeResult> {
+  if (!isDbConfigured()) {
+    throw new Error(
+      "DATABASE_URL is not set — analysis would be computed but could not be saved. Configure Supabase first.",
+    );
+  }
+
+  const messages = await buildAnalysisMessages(input);
+
+  const analysis = await completeJSON({
+    system: ANALYSIS_SYSTEM_PROMPT,
+    messages,
+    schema: DesignAnalysisSchema,
+  });
+
+  const { memoryId } = await persistAnalysis(
+    {
+      sourceType: input.sourceType,
+      sourceRef:
+        input.sourceType === "url" || input.sourceType === "figma"
+          ? input.content
+          : null,
+      title: input.title ?? deriveTitle(input, analysis),
+      industry: input.industry,
+      brand: input.brand,
+      tags: input.tags,
+    },
+    analysis,
+  );
+  return { memoryId, analysis };
 }

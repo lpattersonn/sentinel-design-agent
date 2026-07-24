@@ -26,7 +26,7 @@ export function inferPageType(prompt: string): string {
   return "landing page";
 }
 
-const SYSTEM = `You are Sentinel's prompt engineer for UI builds — a principal design director who rewrites loose build requests into design-directed build prompts a coding agent executes verbatim.
+export const PROMPT_SYSTEM_PROMPT = `You are Sentinel's prompt engineer for UI builds — a principal design director who rewrites loose build requests into design-directed build prompts a coding agent executes verbatim.
 
 Rules:
 - enhancedPrompt must preserve every explicit requirement of the original prompt, then layer concrete design direction: container max-width, grid columns and gutters, spacing scale in px, named font stack with sizes/weights/line-heights, color direction with hex anchors, motion (durations/easing), WCAG AA accessibility, mobile-first breakpoints.
@@ -77,7 +77,7 @@ export async function improvePrompt(input: {
   ].join("\n");
 
   return completeJSON({
-    system: SYSTEM,
+    system: PROMPT_SYSTEM_PROMPT,
     messages: [{ role: "user", content: user }],
     schema: PromptEnhancementSchema,
   });

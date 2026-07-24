@@ -1,5 +1,6 @@
 import { eq, inArray, sql } from "drizzle-orm";
 import { completeJSON } from "@/lib/ai/client";
+import { brainMode } from "@/lib/brain";
 import { embedOne } from "@/lib/ai/embeddings";
 import { getDb } from "@/lib/db";
 import {
@@ -22,11 +23,43 @@ const OUTCOME_DELTA: Record<LearnInput["outcome"], number> = {
 };
 
 const DEFAULT_QUALITY_SCORE = 75;
-const MIN_DETAILS_CHARS = 30;
 
-const INSIGHT_SYSTEM = `You distill design feedback into reusable knowledge for a design agency's shared brain.
+export const INSIGHT_SYSTEM_PROMPT = `You distill design feedback into reusable knowledge for a design agency's shared brain.
 
 Extract only reusable, generalizable design lessons — principles that would improve future projects for other clients. Set worthKeeping=false for project-specific noise: one-off client preferences, logistics, scope changes, or feedback that teaches nothing transferable.`;
+
+export const MIN_DISTILL_DETAILS_CHARS = 30;
+
+/**
+ * Persist a distilled insight. Shared by the server-brain learn flow and the
+ * client-brain save_insight tool. Marks the source feedback event as learned
+ * when a feedbackId is provided.
+ */
+export async function persistInsight(
+  draft: { kind: string; content: string; confidence: number },
+  evidence: { feedbackId?: string; project?: string; outcome?: string },
+): Promise<{ insightId: string }> {
+  const db = getDb();
+  const embedding = await embedOne(draft.content);
+  const [inserted] = await db
+    .insert(insights)
+    .values({
+      kind: draft.kind,
+      content: draft.content,
+      confidence: clamp(draft.confidence, 0, 1),
+      evidence,
+      embedding,
+    })
+    .returning({ id: insights.id });
+
+  if (evidence.feedbackId && UUID_RE.test(evidence.feedbackId)) {
+    await db
+      .update(feedbackEvents)
+      .set({ learned: true })
+      .where(eq(feedbackEvents.id, evidence.feedbackId));
+  }
+  return { insightId: inserted.id };
+}
 
 const clamp = (n: number, min = 0, max = 100) => Math.min(max, Math.max(min, n));
 const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
@@ -101,14 +134,16 @@ export async function learn(input: LearnInput): Promise<LearnResult> {
     }
   }
 
-  // Distill an insight when the feedback carries substantive detail. Soft-fail:
-  // a distillation error must not roll back the feedback + adjustments above.
+  // Distill an insight when the feedback carries substantive detail. In client
+  // brain mode the connected agent does the distillation instead (the MCP layer
+  // returns instructions + the save_insight tool). Soft-fail: a distillation
+  // error must not roll back the feedback + adjustments above.
   let insightId: string | null = null;
   const details = input.details?.trim() ?? "";
-  if (details.length > MIN_DETAILS_CHARS) {
+  if (brainMode() === "server" && details.length > MIN_DISTILL_DETAILS_CHARS) {
     try {
       const draft = await completeJSON({
-        system: INSIGHT_SYSTEM,
+        system: INSIGHT_SYSTEM_PROMPT,
         messages: [
           {
             role: "user",
@@ -129,26 +164,12 @@ export async function learn(input: LearnInput): Promise<LearnResult> {
       });
 
       if (draft.worthKeeping) {
-        const embedding = await embedOne(draft.content);
-        const [inserted] = await db
-          .insert(insights)
-          .values({
-            kind: draft.kind,
-            content: draft.content,
-            confidence: clamp(draft.confidence, 0, 1),
-            evidence: {
-              feedbackId: feedback.id,
-              project: input.project,
-              outcome: input.outcome,
-            },
-            embedding,
-          })
-          .returning({ id: insights.id });
-        insightId = inserted.id;
-        await db
-          .update(feedbackEvents)
-          .set({ learned: true })
-          .where(eq(feedbackEvents.id, feedback.id));
+        const saved = await persistInsight(draft, {
+          feedbackId: feedback.id,
+          project: input.project,
+          outcome: input.outcome,
+        });
+        insightId = saved.insightId;
       }
     } catch (err) {
       console.error("Insight distillation failed:", err);
