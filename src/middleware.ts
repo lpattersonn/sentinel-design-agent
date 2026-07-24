@@ -3,8 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 /**
  * Optional HTTP Basic auth for the dashboard.
  * Active only when SENTINEL_DASHBOARD_PASSWORD is set; username is "sentinel".
- * The API surface (/api/*) is excluded by the matcher — it carries its own
- * bearer-token auth.
+ * The API surface (/api/* and the /mcp alias) is excluded by the matcher —
+ * it carries its own bearer-token auth.
  */
 export function middleware(req: NextRequest) {
   const password = process.env.SENTINEL_DASHBOARD_PASSWORD;
@@ -34,5 +34,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|mcp|_next/static|_next/image|favicon.ico).*)"],
 };

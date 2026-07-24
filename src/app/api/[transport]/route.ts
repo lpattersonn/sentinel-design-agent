@@ -206,6 +206,13 @@ const handler = createMcpHandler(
 const withAuth =
   (h: (req: Request) => Promise<Response> | Response) => async (req: Request) => {
     if (!isAuthorized(req)) return unauthorized();
+    // The /mcp alias (next.config rewrite) preserves the original URL, but
+    // mcp-handler matches the pathname against basePath — normalize it.
+    const url = new URL(req.url);
+    if (!url.pathname.startsWith("/api/")) {
+      url.pathname = `/api${url.pathname}`;
+      req = new Request(url, req);
+    }
     return h(req);
   };
 
