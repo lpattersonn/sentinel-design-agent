@@ -12,7 +12,7 @@ import {
 import { getDb } from "@/lib/db";
 import { patterns, type NewPattern, type PatternRow } from "@/lib/db/schema";
 import { embedOne } from "@/lib/ai/embeddings";
-import { normalizeIndustry } from "@/lib/normalize";
+import { normalizeCategory, normalizeIndustry } from "@/lib/normalize";
 
 /** Pattern row without its raw embedding vector — safe for API/MCP responses. */
 export type PublicPattern = Omit<PatternRow, "embedding">;
@@ -75,9 +75,22 @@ export async function findPatterns(filters: {
 }
 
 export async function upsertPattern(
-  input: NewPattern,
+  raw: NewPattern,
   opts?: { preserveLearnedScores?: boolean },
 ): Promise<PublicPattern> {
+  // Taxonomy enforcement: category snaps to the canonical set, industries to
+  // the canonical vocabulary — freeform values would break agents' filters.
+  const input: NewPattern = {
+    ...raw,
+    category: normalizeCategory(raw.category),
+    industries: [
+      ...new Set(
+        (raw.industries ?? [])
+          .map((i) => normalizeIndustry(i))
+          .filter((i): i is string => i !== null),
+      ),
+    ],
+  };
   // Compute an embedding when the caller has none, so API-created and edited
   // patterns stay reachable from the vector-search branch.
   const embedding =

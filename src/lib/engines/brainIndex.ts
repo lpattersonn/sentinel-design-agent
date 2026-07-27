@@ -8,6 +8,7 @@ import {
   patterns,
 } from "@/lib/db/schema";
 import { toPublicMemory } from "@/lib/engines/memory";
+import { CANONICAL_CATEGORIES, CANONICAL_INDUSTRIES } from "@/lib/normalize";
 
 /**
  * The organized map of Sentinel's brain — lets agents see what exists before
@@ -78,6 +79,11 @@ export async function getBrainIndex() {
     activity: {
       scoresRecorded: Number(scoreCount.total),
       feedbackEvents: Number(feedbackCount.total),
+    },
+    vocabulary: {
+      industries: CANONICAL_INDUSTRIES,
+      patternCategories: CANONICAL_CATEGORIES,
+      note: "Use these exact values when filtering AND when saving (analyze_design industry, pattern categories) — writes are normalized to this vocabulary so the brain grows organized.",
     },
     howToQuery: [
       "find_patterns { category, industry?, query? } — categories above; results ranked by conversionScore.",

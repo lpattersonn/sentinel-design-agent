@@ -274,7 +274,18 @@ export type LearnResult = {
 
 export const InsightDraftSchema = z.object({
   worthKeeping: z.boolean().describe("false if the feedback contains no reusable lesson"),
-  kind: z.enum(["layout", "typography", "color", "conversion", "industry", "process", "other"]),
+  kind: z.enum([
+    "layout",
+    "typography",
+    "color",
+    "conversion",
+    "industry",
+    "process",
+    "interaction",
+    "accessibility",
+    "motion",
+    "other",
+  ]).describe("Pick the most specific kind — 'other' is a last resort"),
   content: z.string().describe("The distilled, reusable lesson in 1-3 sentences"),
   confidence: z.number().describe("0-1"),
 });

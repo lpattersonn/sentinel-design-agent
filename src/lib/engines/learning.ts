@@ -40,8 +40,28 @@ export const MIN_DISTILL_DETAILS_CHARS = 30;
 export async function persistInsight(
   draft: { kind: string; content: string; confidence: number },
   evidence: { feedbackId?: string; project?: string; outcome?: string },
-): Promise<{ insightId: string }> {
+): Promise<{ insightId: string; deduplicated?: boolean }> {
   const db = getDb();
+
+  // Dedupe-on-write: near-duplicate lessons bloat the brain and dilute
+  // retrieval ranking. pg_trgm similarity catches paraphrases of stored
+  // insights; on a match we return the existing row instead of inserting.
+  const [duplicate] = await db
+    .select({ id: insights.id })
+    .from(insights)
+    .where(sql`similarity(${insights.content}, ${draft.content}) > 0.55`)
+    .orderBy(sql`similarity(${insights.content}, ${draft.content}) DESC`)
+    .limit(1);
+  if (duplicate) {
+    if (evidence.feedbackId && UUID_RE.test(evidence.feedbackId)) {
+      await db
+        .update(feedbackEvents)
+        .set({ learned: true })
+        .where(eq(feedbackEvents.id, evidence.feedbackId));
+    }
+    return { insightId: duplicate.id, deduplicated: true };
+  }
+
   const embedding = await embedOne(draft.content);
   const [inserted] = await db
     .insert(insights)

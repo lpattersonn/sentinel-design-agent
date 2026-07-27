@@ -2,7 +2,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { completeJSON } from "@/lib/ai/client";
 import { embedOne } from "@/lib/ai/embeddings";
 import { isDbConfigured } from "@/lib/db";
-import { normalizeIndustry } from "@/lib/normalize";
+import { normalizeIndustry, normalizeTags } from "@/lib/normalize";
 import { saveMemory } from "@/lib/engines/memory";
 import { fetchPublic } from "@/lib/safeFetch";
 import type { NewDesignMemory } from "@/lib/db/schema";
@@ -324,7 +324,7 @@ export async function persistAnalysis(
     sourceRef: meta.sourceRef ?? null,
     industry: normalizeIndustry(meta.industry ?? analysis.industry),
     brand: meta.brand ?? null,
-    tags: meta.tags ?? [],
+    tags: normalizeTags(meta.tags),
     analysis,
     summary: analysis.summary,
     traits: analysis.traits,
