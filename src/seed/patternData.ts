@@ -501,4 +501,199 @@ export const seedPatterns: NewPattern[] = [
     },
     source: "seed:curated",
   },
+  {
+    slug: "sticky-mobile-cta-bar",
+    name: "Sticky Mobile CTA Bar",
+    category: "cta",
+    description:
+      "A bottom-fixed conversion bar that appears on mobile once the visitor scrolls past the hero: 48-56px tall, safe-area aware, holding exactly one primary action with optional one-line context (price, availability) beside it. Hidden on desktop, where inline CTAs and the sticky nav already cover reachability.",
+    whyItWorks:
+      "On mobile the moment of conviction can arrive at any scroll depth, but every inline CTA is gone two swipes later — the sticky bar keeps the conversion action inside the thumb zone at all times without interrupting reading. Deferring its appearance until the hero scrolls out avoids doubling the hero CTA and times the persistent ask to a demonstrated intent signal: the user chose to keep going.",
+    strengths: [
+      "Conversion is one thumb-tap away at every scroll depth — no scroll-back to act",
+      "Scroll-triggered reveal reads as helpful, not pushy, because it never stacks with the hero CTA",
+      "Context text (price, 'free trial') answers the pre-click question at the moment of tap",
+      "Bolts onto any long-scroll page without redesigning sections",
+    ],
+    weaknesses: [
+      "Permanently taxes 48-56px of an already small viewport — content and footer links can hide behind it",
+      "Sits in the browser's bottom gesture zone, inviting accidental taps without safe-area insets",
+      "Stacks badly with other bottom chrome (cookie banners, chat widgets, open keyboards) — it must yield or hide",
+      "A weak or generic label ('Learn more') wastes the most valuable persistent pixels on the page",
+    ],
+    idealUseCases: [
+      "Long-scroll SaaS and product landing pages with one sign-up goal",
+      "E-commerce product pages (persistent add-to-cart with price)",
+      "Booking and reservation pages for hotels, tours, and clinics",
+      "Event and webinar registration pages",
+    ],
+    industries: ["saas", "ecommerce", "hospitality", "tourism", "healthcare"],
+    complexity: 2,
+    conversionScore: 80,
+    spec: {
+      desktop: "hidden at ≥768px — inline CTAs and the sticky nav CTA cover desktop reachability",
+      trigger: "reveals after the hero CTA leaves the viewport (IntersectionObserver), 200ms slide-up ease-out",
+      barHeight: "48-56px content height + env(safe-area-inset-bottom) padding",
+      layout: "context text left (optional, one line), primary button right; or a single full-width button",
+      cta: "filled primary button, outcome-worded, min 48px tall",
+      background: "page background at 95% opacity + backdrop-blur(8px), 1px top hairline at 8% opacity",
+      mobile: {
+        stack: "single fixed row: optional context text (price/reassurance) left, primary CTA right — never more than one filled action",
+        sectionPaddingPx: 8,
+        edgeGutterPx: 16,
+        stackGapPx: 12,
+        tapTargets:
+          "CTA min 48px tall and min 50% of bar width; nothing else interactive in the bar, so mis-taps have only one outcome",
+        notes:
+          "sectionPaddingPx is the bar's internal vertical padding around the 48px button. Pad the bottom with env(safe-area-inset-bottom) so the button clears the iOS home indicator. Hide the bar while the keyboard is open or a bottom sheet is up, and give the page matching bottom padding so the bar never covers the final section or footer links.",
+      },
+    },
+    source: "seed:curated",
+  },
+  {
+    slug: "bottom-sheet-lead-form",
+    name: "Bottom-Sheet Lead Form",
+    category: "forms",
+    description:
+      "The page CTA opens a bottom sheet containing a 1-3 field form (often just name and email or phone) instead of navigating to a separate form page. The page stays visible, dimmed, behind the sheet; further fields are progressively disclosed in a second step only after the first commit. On desktop the same form renders as a centered modal or inline section.",
+    whyItWorks:
+      "Navigating to a form page is a context reset — the persuading content disappears, a page load is paid, and the back button becomes the easiest tap on screen. A bottom sheet keeps the page (and the reason to convert) visible behind the scrim, places fields and submit directly in the thumb zone, and its 1-3 field first step exploits commitment escalation: once the cheap answer is given, finishing step two is psychologically cheaper than abandoning it.",
+    strengths: [
+      "Zero navigation cost — context and scroll position survive the entire conversion",
+      "Fields and submit sit thumb-native at the bottom, exactly where the keyboard leaves room",
+      "Progressive disclosure converts a scary 8-field ask into a trivial 2-field one",
+      "Drag-to-dismiss feels native, so trying the form is low-commitment",
+    ],
+    weaknesses: [
+      "Demands real focus management — focus trap, aria-modal, focus return on close — or it is an accessibility failure",
+      "Open keyboard plus sheet can exceed small viewports; the sheet must resize instead of hiding its own submit button",
+      "iOS Safari's dynamic toolbar and viewport units make naive height math break — needs dvh/VisualViewport handling",
+      "Form exists only behind an interaction — no scannable fallback for crawlers or users who block scripts",
+    ],
+    idealUseCases: [
+      "Lead capture on service and agency landing pages",
+      "Quote, viewing, or consultation requests in real estate and healthcare",
+      "Waitlist and early-access sign-ups",
+      "Callback-request flows where a phone number is the only real requirement",
+    ],
+    industries: ["saas", "agency", "real-estate", "healthcare", "fintech"],
+    complexity: 3,
+    conversionScore: 78,
+    spec: {
+      desktop: "≥768px renders as a 480px centered modal or an inline form section — sheets are a mobile gesture idiom",
+      sheet: "max 85dvh tall, 16-20px top radius, 32px drag handle centered, scrim at 40% black",
+      fieldsStepOne: "1-3 fields max, labels above inputs, 48px input height, 16px font",
+      progression: "step two slides in within the same sheet after step-one submit; progress shown as '1 of 2'",
+      ctaPlacement: "full-width submit pinned inside the sheet bottom, outcome-worded",
+      motion: "sheet slides up 250ms ease-out; drag-to-dismiss with velocity threshold",
+      mobile: {
+        stack: "sheet anatomy top-down: drag handle, one-line headline, 1-3 fields, full-width submit, one-line trust microcopy",
+        sectionPaddingPx: 24,
+        edgeGutterPx: 20,
+        stackGapPx: 16,
+        tapTargets:
+          "48px inputs, full-width 48px submit, 44x44px close target; drag handle zone min 24px tall across the sheet's full width",
+        notes:
+          "16px input font is non-negotiable (iOS zoom inside a sheet is disorienting). Track the keyboard with VisualViewport and keep the submit button visible above it. Trap focus while open, return focus to the triggering CTA on close, and respect prefers-reduced-motion by fading instead of sliding.",
+      },
+    },
+    source: "seed:curated",
+  },
+  {
+    slug: "thumb-zone-pricing-select",
+    name: "Thumb-Zone Pricing Selector",
+    category: "pricing",
+    description:
+      "Mobile pricing rendered as stacked selectable cards rather than three competing buttons: the recommended tier arrives pre-selected (accent border, badge, radio state), each card shows price plus its top 3 differentiators with the full feature list behind an expander, and a sticky bottom bar mirrors the current selection with one continue CTA.",
+    whyItWorks:
+      "Desktop pricing is compared side by side in one glance; on mobile the same three tiers are compared from memory across two or three viewports of scroll, which amplifies choice paralysis. Pre-selecting the recommended tier exploits the default effect so browsing collapses into a single accept-or-adjust decision, and the sticky selection bar keeps price and action visible during comparison — the user can read tier three while the buy button for tier two stays one tap away.",
+    strengths: [
+      "Default effect steers tier choice even harder on mobile than desktop, without hiding alternatives",
+      "One continue CTA replaces three competing per-card buttons — no intent splitting",
+      "Sticky selection bar means comparison scroll never strands the user away from the action",
+      "Expanders keep three full tiers inside ~1.5 viewports instead of 4+",
+    ],
+    weaknesses: [
+      "Select-then-continue costs one extra tap versus direct per-card CTAs — a bad trade for single-tier or impulse products",
+      "Collapsed feature lists hide differentiators; the 3 visible bullets per card must genuinely separate the tiers or the choice becomes price-only",
+      "Sticky selection bar competes with any other bottom chrome for the same pixels",
+      "Pre-selection reads as manipulative to sophisticated buyers if the recommended tier is transparently the most expensive",
+    ],
+    idealUseCases: [
+      "Self-serve SaaS plan selection on mobile",
+      "Membership and subscription tier choice",
+      "Hotel room-type or package selection in booking flows",
+      "Insurance or service-level selection in quote funnels",
+    ],
+    industries: ["saas", "fintech", "hospitality", "ecommerce"],
+    complexity: 3,
+    conversionScore: 74,
+    spec: {
+      desktop: "≥768px reverts to the classic 3-col highlighted-middle grid — the selector model is a small-screen adaptation",
+      cardAnatomy: "radio state + plan name + badge row, price 32/36 700, top-3 differentiators 15/24, 'See everything' expander",
+      selectionState: "2px accent border + subtle accent tint on the selected card; unselected cards 1px 10% border",
+      stickyBar: "56px + safe-area, selected tier + price left, continue CTA right, appears once the pricing section enters view",
+      expanders: "collapsed by default, chevron row 48px tall, full feature list 15/24 inside",
+      mobile: {
+        stack: "stacked cards, recommended tier first and pre-selected; sticky selection bar pinned to the bottom while the section is in view",
+        sectionPaddingPx: 48,
+        edgeGutterPx: 20,
+        stackGapPx: 12,
+        tapTargets:
+          "entire card is the select target (min 88px tall collapsed); expander row 48px tall full-width; continue CTA min 48px tall and ≥50% of bar width",
+        notes:
+          "Card padding 20px, price 32px (down from desktop 48). Selecting a card must never auto-scroll or auto-expand — selection and reading are separate acts. The sticky bar restates the chosen tier and monthly price so the continue tap is made with the number in view, not from memory.",
+      },
+    },
+    source: "seed:curated",
+  },
+  {
+    slug: "tap-to-act-bar",
+    name: "Tap-to-Act Bar",
+    category: "cta",
+    description:
+      "A persistent bottom action bar for local and service businesses: tap-to-call (tel:), directions (maps deep link), and book, with call as the visually primary action. Two or three actions maximum, each an OS-level intent rather than an in-page form. Desktop swaps it for a visible phone number and inline booking CTA.",
+    whyItWorks:
+      "On mobile the phone IS the conversion device — a tel: link turns intent into a live call in one tap with zero fields, while a form costs typing, a submit, and a response delay during which intent decays. Local intent is time-sensitive ('open now', 'near me'), so removing every step between wanting and calling captures conversions at their hottest moment; directions and booking cover the two other terminal actions a local visitor actually wants.",
+    strengths: [
+      "Zero-form conversion: one tap to a ringing phone beats any lead form on completion cost",
+      "Matches dominant local-mobile intent — call, go there, or book covers nearly every visit's goal",
+      "Calls are measurable with call-tracking numbers, so the bar's conversion impact is provable",
+      "Trivial to implement: three intent links and a fixed bar — highest ROI per hour of build time",
+    ],
+    weaknesses: [
+      "Every added action dilutes the primary one — call must stay the single filled button or the bar becomes a nav strip",
+      "Tap-to-call outside business hours rings into voicemail and burns the hottest intent — the bar should swap call for book/hours state after close",
+      "Same viewport tax and bottom-chrome stacking problems as any fixed bar",
+      "Meaningless on desktop — tel: links there are broken promises; requires a real desktop fallback",
+    ],
+    idealUseCases: [
+      "Restaurants, clinics, salons, and repair services — any call-to-book business",
+      "Hotel and tour operator pages where phone still closes the booking",
+      "Real-estate agent and property pages (call agent / directions to viewing)",
+      "Emergency and same-day services where speed to contact is the whole sale",
+    ],
+    industries: ["healthcare", "hospitality", "tourism", "real-estate"],
+    complexity: 2,
+    conversionScore: 86,
+    spec: {
+      desktop: "hidden ≥768px — replaced by a header phone number in text and an inline booking CTA",
+      barHeight: "56px content + env(safe-area-inset-bottom)",
+      actions: "max 3: call (filled primary), directions (ghost, maps deep link), book (ghost or second step)",
+      links: "tel:+<E.164 number>, geo:/maps universal link, booking URL — OS intents, no in-page handlers",
+      hoursAwareness: "after closing time the call slot swaps to 'Book for tomorrow' or shows 'Opens 9am' state",
+      background: "solid page background, 1px top hairline at 8% opacity — no blur needed over content this bar outranks",
+      mobile: {
+        stack: "single fixed row of 2-3 equal-width action slots; call is the only filled button, icon + short label per slot",
+        sectionPaddingPx: 8,
+        edgeGutterPx: 16,
+        stackGapPx: 8,
+        tapTargets:
+          "each action slot min 48px tall and min 96px wide (icon 20px + 12px label); 8px gap between slots so adjacent intents never merge into one mis-tap",
+        notes:
+          "sectionPaddingPx is the bar's internal vertical padding. Use a call-tracking number in the tel: link to attribute conversions. Keep labels to one word (Call, Directions, Book) — two-line labels break the 56px bar. Page content gets matching bottom padding so the bar never covers the address or footer hours.",
+      },
+    },
+    source: "seed:curated",
+  },
 ];

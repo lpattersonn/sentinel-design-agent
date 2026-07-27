@@ -392,6 +392,140 @@ const linearAnalysis: DesignAnalysis = {
   ],
 };
 
+const shopifyCheckoutAnalysis: DesignAnalysis = {
+  summary:
+    "Shopify's mobile checkout is conversion engineering distilled: a single-column flow that asks one decision per screen, puts express-pay wallets (Shop Pay, Apple Pay) above manual entry so most buyers never see a card form, and treats every field as a cost to be justified. The order summary collapses behind a toggle, trust signals cluster around the pay button, and inline error recovery means a typo never restarts the flow.",
+  style: "utilitarian conversion-first commerce",
+  industry: "ecommerce",
+  brandPersonality: ["trustworthy", "efficient", "unobtrusive", "reassuring"],
+  spacing: {
+    system: "tight 4px-base system tuned for one-screen steps, not editorial rhythm",
+    baseUnit: 4,
+    sectionSpacing:
+      "24-32px between checkout blocks (contact, shipping, payment); 12-16px between fields inside a block — compact enough that a whole step fits one 390px viewport",
+    notes:
+      "Spacing is budgeted backwards from the goal: each step's fields plus its primary button must fit a single mobile viewport with the keyboard closed. Generosity is spent only around the pay button, which gets 24px of isolation so nothing competes with the final tap.",
+  },
+  typography: {
+    headingFont: "system stack (SF Pro / Roboto) — native rendering speed over brand voice",
+    bodyFont: "system stack",
+    scale:
+      "quiet scale: step titles 21-24px/600, labels 14px, inputs and body 16px, legal microcopy 12-13px — no display type anywhere in the flow",
+    hierarchyNotes:
+      "16px inputs are a hard floor to prevent iOS auto-zoom. Hierarchy favors the transaction, not the brand: the largest, boldest elements are the order total and the pay button label, because those are the two things a buyer re-checks before committing.",
+  },
+  hierarchy: {
+    strength: "strong",
+    focalPoints: [
+      "express-pay wallet buttons stacked at the very top of checkout",
+      "the single primary action button pinned at the bottom of each step",
+      "order total, always one toggle away and restated on the pay button itself",
+    ],
+    notes:
+      "Each screen has exactly one decision and one primary button; everything else (edit links, return-to-cart, discount code) is a text link. The buyer never chooses between two filled buttons anywhere in the flow.",
+  },
+  grid: {
+    columns: 1,
+    containerWidth: "100% minus 16-20px gutters on mobile; ~576px single column centered on desktop",
+    notes:
+      "Deliberately single-column even on wide screens — multi-column checkout forms create Z-pattern eye travel and field-order ambiguity. The one exception is paired short fields (city/postcode) that share a row only when both are short-answer.",
+  },
+  visualRhythm:
+    "A metronome of identical steps: title, a handful of fields, primary button — repeated until paid. Predictability is the rhythm; the buyer learns the pattern on step one and executes the rest on autopilot, with the collapsed order summary as a constant, quiet header presence.",
+  colors: {
+    palette: [
+      { hex: "#FFFFFF", role: "form background" },
+      { hex: "#202223", role: "primary text and input values" },
+      { hex: "#6D7175", role: "labels, microcopy, secondary text" },
+      { hex: "#5A31F4", role: "Shop Pay express button — the loudest element on screen" },
+      { hex: "#008060", role: "merchant-configurable primary pay button (Shopify green default)" },
+      { hex: "#D72C0D", role: "inline error text and error borders" },
+    ],
+    notes:
+      "Chrome is deliberately colorless so the two colored elements — express wallet and pay button — are always the most visible things on screen. Error red appears only next to the offending field, never as a page-level banner that implies the whole attempt failed.",
+  },
+  componentPatterns: [
+    {
+      category: "forms",
+      description:
+        "Single-column field stack asking the minimum per step: email first, then shipping, then payment. Autocomplete attributes on every field, inputmode switching keyboards (numeric for card/postcode, email for email), address autocompletion collapsing five fields into one, 48px inputs at 16px font.",
+      whyItWorks:
+        "Every field is a chance to abandon, so fields are removed, auto-filled, or deferred wherever possible; correct keyboards and autocomplete cut typing — the single most error-prone act on mobile — sometimes to zero.",
+    },
+    {
+      category: "cta",
+      description:
+        "Express-pay wallets (Shop Pay, Apple Pay, Google Pay) stacked above the manual form under an 'Express checkout' label, with a hairline 'OR' divider. Below, each step ends in one full-width bottom-anchored primary button that states the outcome — 'Continue to shipping', 'Pay now' — with the total restated at the point of payment.",
+      whyItWorks:
+        "Wallets convert a 12-field form into one biometric confirmation for returning buyers — the majority path skips manual entry entirely. Outcome-worded, bottom-anchored buttons sit in the thumb zone and tell the buyer exactly what the tap costs before they commit.",
+    },
+    {
+      category: "cards",
+      description:
+        "Order summary collapsed behind a 'Show order summary' toggle with the total visible in the collapsed state; expanding reveals line items, shipping, and taxes inline without navigation.",
+      whyItWorks:
+        "The buyer's recurring anxiety — 'what am I paying?' — is answered in one tap without leaving the flow, while the collapsed default keeps the form, not the receipt, as the screen's job.",
+    },
+    {
+      category: "navigation",
+      description:
+        "Checkout strips global chrome entirely: no site nav, no footer links, just a breadcrumb of the steps (Information > Shipping > Payment) and a quiet return link.",
+      whyItWorks:
+        "Every exit removed is an abandonment path closed; the breadcrumb preserves orientation and signals finite remaining effort, which keeps buyers who are two-thirds done from bailing.",
+    },
+    {
+      category: "other",
+      description:
+        "Trust cluster at the commitment point: padlock icon and reassurance line adjacent to the pay button, wallet brand marks doing double duty as security signals, payment network badges near card entry.",
+      whyItWorks:
+        "Trust is consumed at the moment of highest perceived risk — entering payment and tapping pay — so signals are placed at that exact point instead of a distant footer the buyer never scrolls to.",
+    },
+  ],
+  animation: {
+    present: true,
+    style:
+      "near-none by design: 150-200ms ease transitions on the summary expand/collapse and inline error reveals; skeleton states during payment processing",
+    notes:
+      "Checkout is the one surface where motion is almost pure risk — anything playful reads as unserious next to a credit card field. The only essential animation is the processing state after 'Pay now', which prevents double-submission taps.",
+  },
+  accessibility: {
+    estimatedLevel: "AA",
+    issues: [
+      "merchant-themed pay button colors can dip below 4.5:1 when brands override the default",
+      "13px legal microcopy sits at the small end of comfortable legibility",
+    ],
+    strengths: [
+      "labels are real elements above inputs, never placeholder-only, so context survives typing",
+      "errors are announced inline, adjacent to the field, with color plus icon plus text — never color alone",
+      "logical focus order and correct input types make the flow completable by screen reader and keyboard",
+      "16px inputs prevent the iOS zoom-and-lose-your-place failure entirely",
+    ],
+  },
+  responsiveness: {
+    approach:
+      "mobile-first in the strict sense: the phone layout is the canonical design and desktop is the adaptation — a centered single column with the order summary moving to a persistent side panel",
+    notes:
+      "Because most checkout traffic is mobile, the desktop view is a widened phone flow rather than the reverse; nothing essential exists on desktop that mobile lacks. The thumb-zone button placement and one-decision-per-screen structure are preserved at every width.",
+  },
+  traits: [
+    "wallets above manual entry",
+    "one decision per screen",
+    "field minimization",
+    "collapsed order summary",
+    "trust at the point of payment",
+    "inline error recovery",
+  ],
+  lessons: [
+    "Put express-pay wallets above the manual card form: the highest-converting checkout is the one most buyers never have to type in.",
+    "Ask one decision per screen on mobile funnels — a step whose fields and button fit one viewport gets finished; a wall of fields gets abandoned.",
+    "Treat every form field as a cost: remove it, auto-fill it via autocomplete/address lookup, or defer it past the commitment point.",
+    "Collapse the order summary behind a toggle with the total visible — answer 'what am I paying?' in one tap without surrendering the screen to the receipt.",
+    "Place trust signals (padlock, guarantee, payment badges) adjacent to the pay button, where risk is felt — not in a footer nobody scrolls to.",
+    "Set every input to 16px with correct inputmode and autocomplete attributes; the on-screen keyboard is part of the form's design.",
+    "Recover errors inline next to the field, preserving all entered data — a page-level error that forces re-entry converts a typo into an abandonment.",
+  ],
+};
+
 export const seedMemories: SeedMemory[] = [
   {
     title: "Apple — marketing site design language",
@@ -428,6 +562,18 @@ export const seedMemories: SeedMemory[] = [
     summary: linearAnalysis.summary,
     traits: linearAnalysis.traits,
     qualityScore: 92,
+  },
+  {
+    title: "Mobile commerce checkout — conversion design language",
+    sourceType: "description",
+    sourceRef: "https://www.shopify.com",
+    brand: "Shopify",
+    industry: "ecommerce",
+    tags: ["mobile", "checkout", "conversion", "forms"],
+    analysis: shopifyCheckoutAnalysis,
+    summary: shopifyCheckoutAnalysis.summary,
+    traits: shopifyCheckoutAnalysis.traits,
+    qualityScore: 93,
   },
 ];
 
@@ -491,5 +637,53 @@ export const seedInsights: SeedInsight[] = [
     content:
       "Horizontal overflow is the most common mobile defect: one fixed-width table, unwrapped code block, or 100vw+padding section makes the whole page wobble sideways. Audit every page at 360px — nothing except an intentional carousel or scroll container may scroll horizontally, and offenders get their own overflow-x wrapper, never the body.",
     confidence: 0.87,
+  },
+  {
+    kind: "conversion",
+    content:
+      "On mobile checkout and payment flows, stack express-pay wallets (Apple Pay, Google Pay, Shop Pay) above manual card entry, not below it: a wallet collapses 12-20 typed fields into one biometric confirmation, and every field it bypasses is a field that can no longer cause abandonment. Shopify reports Shop Pay checkouts completing at roughly 1.7x the rate of regular guest checkout — the manual form should be the fallback path, never the default.",
+    confidence: 0.91,
+  },
+  {
+    kind: "conversion",
+    content:
+      "Ask only what fulfillment actually needs: every removed form field measurably lifts mobile completion because each field costs a keyboard round-trip, an error opportunity, and a moment to reconsider. Cutting an 11-field form to 4 has lifted conversions on the order of 100%+ in published tests; 'company', 'phone', and 'how did you hear about us' are optimization targets, not defaults — collect them after the commitment, not before it.",
+    confidence: 0.92,
+  },
+  {
+    kind: "conversion",
+    content:
+      "A top-of-page CTA is gone one swipe after load, but on mobile the moment of conviction usually arrives mid-page — after proof, pricing, or reviews. A bottom-fixed CTA bar (48-56px plus safe-area inset, one primary action, revealed only after the hero scrolls out) keeps conversion one thumb-tap away at every scroll depth; the delayed reveal matters, because showing it immediately doubles the hero CTA and reads as pressure instead of convenience.",
+    confidence: 0.89,
+  },
+  {
+    kind: "conversion",
+    content:
+      "Split mobile funnels into one decision per screen: a wall of 10+ fields reads as work and gets abandoned before the first tap, while the same fields as 3-4 short steps with a visible progress indicator ('2 of 3') routinely complete at 50%+ higher rates in multi-step form studies. Sequence cheap questions first (email before address before payment) so commitment escalates — a user two steps in finishes; a user staring at everything at once leaves.",
+    confidence: 0.87,
+  },
+  {
+    kind: "conversion",
+    content:
+      "For local and service businesses (clinics, restaurants, salons, trades, hotels), the highest-converting mobile CTA is a tel: link, not a form: one tap converts hot intent into a live call with zero fields, while a form costs typing plus a response delay during which intent decays — phone leads close at several times the rate of web-form leads in local-marketing studies. Make tap-to-call the filled primary action in a persistent bottom bar, use a call-tracking number to prove it, and swap it for booking outside business hours.",
+    confidence: 0.88,
+  },
+  {
+    kind: "process",
+    content:
+      "Treat mobile speed and layout stability as conversion features, not engineering hygiene: roughly every 100ms of added load time costs ~1% of conversions in retail studies, 53% of mobile visits abandon pages that take over 3s, and a button that shifts mid-tap converts a click into a mis-tap. Budget the hero's image+font payload to ~200KB, set explicit width/height (or aspect-ratio) on all media and embeds to reserve their space, and hold CLS under 0.1 — a fast page that jumps still loses the tap.",
+    confidence: 0.88,
+  },
+  {
+    kind: "layout",
+    content:
+      "At 390px width, the trust furniture that sat beside the desktop hero — logo strip, review stars, guarantee, payment badges — silently falls three viewports down. Audit mobile layouts so at least a review count with rating and one risk-reversal line ('free cancellation', 'money-back guarantee') land within the first two viewports (~1500px): a single-line trust row directly under the primary CTA costs ~40px and answers 'can I trust this?' at the moment the first tap is being considered.",
+    confidence: 0.86,
+  },
+  {
+    kind: "conversion",
+    content:
+      "Pre-select the recommended tier on mobile pricing: desktop users compare three cards side by side in one glance, but mobile users compare them from memory across 2-3 viewports of scroll, which amplifies choice paralysis. A pre-selected default (accent border, radio state, 'recommended' badge) plus a sticky bar restating the chosen tier and price turns open-ended comparison into a single accept-or-adjust decision — the default effect does more work on a 390px screen than anywhere else.",
+    confidence: 0.86,
   },
 ];
