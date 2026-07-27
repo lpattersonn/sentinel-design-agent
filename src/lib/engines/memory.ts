@@ -24,11 +24,17 @@ export function toPublicMemory(row: DesignMemoryRow): PublicDesignMemory {
   const { embedding: _omit, ...rest } = row;
   if (!rest.confidential) return rest;
   const style = (rest.analysis as { style?: string } | null)?.style ?? "Design study";
+  // Tags naming the client's brand would defeat the title/brand redaction.
+  const brand = rest.brand?.toLowerCase();
+  const tags = brand
+    ? rest.tags.filter((t) => !t.toLowerCase().includes(brand))
+    : rest.tags;
   return {
     ...rest,
     title: `${style} — confidential client work${rest.industry ? ` (${rest.industry})` : ""}`,
     brand: null,
     sourceRef: null,
+    tags,
   };
 }
 
