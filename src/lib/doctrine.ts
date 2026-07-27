@@ -129,7 +129,7 @@ Workflow (follow it — the flywheel only turns when the loop closes):
 2. When the user shares a design worth learning from: analyze_design (pass confidential: true for the agency's own client work).
 3. AFTER building: score_design; apply topImprovements until the overall score clears the bar. Then audit_mobile — a page is NOT done until the mobile audit reports zero blockers (layout, spacing, touch, typography, forms, navigation at 360/390/768px). Prefer measuring (render + measure) over judging when you have browser tooling.
 4. When the user reports how delivered work landed: learn.
-5. Prefer search_memory / find_patterns over generic defaults.
+5. Prefer search_memory / find_patterns over generic defaults. Unsure what Sentinel knows? get_brain_index returns the organized map (pattern categories, insight kinds, memory titles) — call it once, then query precisely.
 
 In client-brain mode, tools return BRIEFS: prepared source + instructions + a JSON output schema. YOU do the reasoning, honor the brief's EXECUTION DISCIPLINE block, and finish with its 'then' step (usually a save_* tool call).
 

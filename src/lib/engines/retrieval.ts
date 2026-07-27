@@ -16,6 +16,9 @@ import { normalizeIndustry } from "@/lib/normalize";
 import type { SearchHit } from "@/lib/types";
 
 const DEFAULT_LIMIT = 8;
+// Keyword search scores in JS, so fetch a wide candidate pool first — a
+// recency-capped pre-filter would silently drop the best match as the brain grows.
+const KEYWORD_CANDIDATE_POOL = 50;
 const SNIPPET_LENGTH = 240;
 // Keyword scores are normalized into 0..1 then damped so genuine vector
 // similarity outranks weak keyword hits when the two result sets merge.
@@ -36,12 +39,15 @@ function toPublicInsight(row: InsightRow): Omit<InsightRow, "embedding" | "evide
   return rest;
 }
 
+export type SearchKind = "memory" | "insight";
+
 export async function searchMemory(
   query: string,
-  opts?: { industry?: string; limit?: number },
+  opts?: { industry?: string; limit?: number; kind?: SearchKind },
 ): Promise<SearchHit[]> {
   const limit = Math.min(opts?.limit ?? DEFAULT_LIMIT, 20);
   const industry = normalizeIndustry(opts?.industry) ?? undefined;
+  const kind = opts?.kind;
   const vec = await embedOne(query);
 
   let hits: SearchHit[];
@@ -63,6 +69,7 @@ export async function searchMemory(
   } else {
     hits = await keywordSearch(query, industry, limit);
   }
+  if (kind) hits = hits.filter((h) => h.kind === kind);
   return hits.sort((a, b) => b.score - a.score).slice(0, limit);
 }
 
@@ -150,13 +157,13 @@ async function keywordSearch(
         ),
       )
       .orderBy(desc(designMemories.createdAt))
-      .limit(limit),
+      .limit(KEYWORD_CANDIDATE_POOL),
     db
       .select()
       .from(insights)
       .where(or(...patterns.map((p) => ilike(insights.content, p))))
       .orderBy(desc(insights.createdAt))
-      .limit(limit),
+      .limit(KEYWORD_CANDIDATE_POOL),
   ]);
 
   // Normalized 0..1 (matched words / query words), then damped below vector scores.
@@ -166,25 +173,28 @@ async function keywordSearch(
     return (matches / words.length) * KEYWORD_SCORE_WEIGHT;
   };
 
-  return [
-    ...memoryRows.map((row): SearchHit => {
-      const pub = toPublicMemory(row);
-      return {
-        kind: "memory",
-        id: row.id,
-        title: pub.title,
-        snippet: snippet(row.summary),
-        score: keywordScore(`${row.title} ${row.summary}`),
-        data: pub,
-      };
-    }),
-    ...insightRows.map((row): SearchHit => ({
-      kind: "insight",
+  const memoryHits = memoryRows.map((row): SearchHit => {
+    const pub = toPublicMemory(row);
+    return {
+      kind: "memory",
       id: row.id,
-      title: `Insight: ${row.kind}`,
-      snippet: snippet(row.content),
-      score: keywordScore(row.content),
-      data: toPublicInsight(row),
-    })),
-  ];
+      title: pub.title,
+      snippet: snippet(row.summary),
+      score: keywordScore(`${row.title} ${row.summary} ${row.traits.join(" ")}`),
+      data: pub,
+    };
+  });
+  const insightHits = insightRows.map((row): SearchHit => ({
+    kind: "insight",
+    id: row.id,
+    title: `Insight: ${row.kind}`,
+    snippet: snippet(row.content),
+    score: keywordScore(`${row.kind} ${row.content}`),
+    data: toPublicInsight(row),
+  }));
+
+  // Best-scoring per table, not newest per table.
+  const top = (hits: SearchHit[]) =>
+    hits.sort((a, b) => b.score - a.score).slice(0, limit);
+  return [...top(memoryHits), ...top(insightHits)];
 }

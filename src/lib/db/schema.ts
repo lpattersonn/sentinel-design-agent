@@ -55,6 +55,9 @@ export const designMemories = pgTable(
       "hnsw",
       t.embedding.op("vector_cosine_ops"),
     ),
+    // pg_trgm GIN indexes keep ILIKE keyword search fast as the brain grows.
+    index("design_memories_title_trgm_idx").using("gin", t.title.op("gin_trgm_ops")),
+    index("design_memories_summary_trgm_idx").using("gin", t.summary.op("gin_trgm_ops")),
   ],
 );
 
@@ -83,6 +86,8 @@ export const patterns = pgTable(
     uniqueIndex("patterns_slug_idx").on(t.slug),
     index("patterns_category_idx").on(t.category),
     index("patterns_embedding_idx").using("hnsw", t.embedding.op("vector_cosine_ops")),
+    index("patterns_name_trgm_idx").using("gin", t.name.op("gin_trgm_ops")),
+    index("patterns_description_trgm_idx").using("gin", t.description.op("gin_trgm_ops")),
   ],
 );
 
@@ -119,6 +124,7 @@ export const insights = pgTable(
   },
   (t) => [
     index("insights_embedding_idx").using("hnsw", t.embedding.op("vector_cosine_ops")),
+    index("insights_content_trgm_idx").using("gin", t.content.op("gin_trgm_ops")),
   ],
 );
 

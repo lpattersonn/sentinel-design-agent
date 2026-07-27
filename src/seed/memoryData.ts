@@ -686,4 +686,310 @@ export const seedInsights: SeedInsight[] = [
       "Pre-select the recommended tier on mobile pricing: desktop users compare three cards side by side in one glance, but mobile users compare them from memory across 2-3 viewports of scroll, which amplifies choice paralysis. A pre-selected default (accent border, radio state, 'recommended' badge) plus a sticky bar restating the chosen tier and price turns open-ended comparison into a single accept-or-adjust decision — the default effect does more work on a 390px screen than anywhere else.",
     confidence: 0.86,
   },
+  {
+    kind: "other",
+    content:
+      "Every user action deserves acknowledgment within ~100ms — a pressed state, a highlight, a counter tick — because feedback is how users confirm cause and effect; silence makes them re-click or distrust the control (Nielsen: visibility of system status). Ambient state (saved/unsaved, online/offline, filters active) should be readable at a glance, never held in the user's head.",
+    confidence: 0.9,
+  },
+  {
+    kind: "other",
+    content:
+      "Speak the user's language, not the system's: 'Save changes' and 'Card ending 4242' map to real-world concepts, while 'Commit', 'Instance', or raw error codes force translation work (Nielsen: match with the real world). Order information the way the task flows in life — name, then address, then payment — not the way the database schema stores it.",
+    confidence: 0.88,
+  },
+  {
+    kind: "other",
+    content:
+      "Prefer undo over interrogation: reversing an action after the fact (a 5-10s undo toast on delete, archive, or send) is faster and less annoying than confirming before it, and it makes exploration feel safe (Nielsen: user control and freedom). Every multi-step flow also needs a clearly marked exit that discards cleanly — trapped users close the tab instead.",
+    confidence: 0.89,
+  },
+  {
+    kind: "process",
+    content:
+      "The same action must look, sit, and behave identically everywhere in a product — one primary-button style, one delete gesture, dialog buttons in one fixed order — because each deviation forces users to re-learn something they already knew (Nielsen: consistency and standards). Treat drift as a defect: two visual treatments for one behavior is a bug, not a variation.",
+    confidence: 0.9,
+  },
+  {
+    kind: "other",
+    content:
+      "Design errors out before designing error messages: constrain inputs (date pickers over free text), default to the safe choice, disable impossible combinations, and reserve confirmation for genuinely destructive acts (Nielsen: error prevention). A field that cannot accept an invalid value never needs a red banner — prevention is always cheaper than recovery.",
+    confidence: 0.9,
+  },
+  {
+    kind: "other",
+    content:
+      "Show, don't quiz: visible options, recents, and in-place previews let users recognize the right choice, which is far easier than recalling names, codes, or syntax from memory (Nielsen: recognition rather than recall). If any step requires remembering something from a previous screen — an order number, a chosen plan — restate it where it's needed; the design, not the user, carries the memory.",
+    confidence: 0.9,
+  },
+  {
+    kind: "other",
+    content:
+      "Layer accelerators for experts on top of visible paths for novices: keyboard shortcuts, saved defaults, recents, and bulk actions let frequent users compress routine work without adding a single element beginners must understand (Nielsen: flexibility and efficiency of use). The test is simple — an expert's tenth repetition of a task should cost a fraction of their first.",
+    confidence: 0.87,
+  },
+  {
+    kind: "other",
+    content:
+      "An error message must answer three things in plain language: what happened, why, and the one action that fixes it — 'That card was declined; try another card or contact your bank' beats any error code (Nielsen: help users recover from errors). Precision converts dead ends into two-second fixes: 'Password needs 8+ characters' gets retried, 'Invalid input' gets abandoned.",
+    confidence: 0.89,
+  },
+  {
+    kind: "other",
+    content:
+      "Scale feedback to the action's weight: frequent minor actions get subtle acknowledgment (a tick, a brief highlight) while rare consequential ones get substantial confirmation (a summary screen, an emailed receipt) (Shneiderman: informative feedback). Uniform feedback fails both directions — loud toasts for trivia train users to ignore the one that matters.",
+    confidence: 0.86,
+  },
+  {
+    kind: "conversion",
+    content:
+      "Give every task sequence a beginning, middle, and explicit end: a confirmation like 'Order placed — arriving Thursday' releases attention and delivers the small completion reward that makes starting the next task feel easy (Shneiderman: design dialogs to yield closure). A flow that ends without confirmation leaves users re-checking whether the action actually took.",
+    confidence: 0.87,
+  },
+  {
+    kind: "other",
+    content:
+      "Never make users carry information between screens: working memory holds only a few items for a few seconds, so the compared plans, entered address, or referenced total must stay visible at the point of use (Shneiderman: reduce short-term memory load). Multi-step flows should restate earlier answers in place ('Shipping to 14 Elm St — edit') instead of trusting recall.",
+    confidence: 0.88,
+  },
+  {
+    kind: "layout",
+    content:
+      "Time to hit a target grows with distance and shrinks with size (Fitts's law), so make the primary action the biggest, nearest thing to where the pointer or thumb already is: full-width buttons directly below the fields they submit, related controls clustered, and desktop screen edges and corners exploited because a cursor cannot overshoot them.",
+    confidence: 0.94,
+  },
+  {
+    kind: "conversion",
+    content:
+      "Decision time grows logarithmically with the number of options (Hick's law): a 12-item top nav or a 6-tier pricing page stalls users before they act. Cap simultaneous choices at roughly 5-7, chunk anything larger into labeled categories, and mark a recommended default so the common case collapses into a one-item decision.",
+    confidence: 0.93,
+  },
+  {
+    kind: "process",
+    content:
+      "Users spend most of their time on other sites, so they arrive pre-trained: logo top-left goes home, cart lives top-right, accent-colored text is a link (Jakob's law). Following convention spends zero novelty budget on navigation and saves all of it for the product — break a convention only for a measurable payoff, and never break two at once.",
+    confidence: 0.93,
+  },
+  {
+    kind: "other",
+    content:
+      "Working memory tops out around 7±2 items, but design for 3-5: chunk long strings ('4242 4242 4242 4242' beats a 16-digit run), group navigation into a handful of labeled sections, and split long forms into named steps (Miller's law). Chunking works because a well-formed group is remembered as one item, not many.",
+    confidence: 0.88,
+  },
+  {
+    kind: "process",
+    content:
+      "People judge an experience by its most intense moment and its ending, not its average (peak-end rule), so spend disproportionate polish on the flow's emotional peak (payment, publish, send) and its final screen — a delightful confirmation outweighs three mediocre middle steps in memory, and a rough ending retroactively sours an otherwise smooth flow.",
+    confidence: 0.86,
+  },
+  {
+    kind: "layout",
+    content:
+      "In a field of similar items, the one that differs is the one remembered and chosen (Von Restorff isolation effect) — this is the mechanism beneath a lone accent-colored button among neutral elements and a single 'most popular' badge on a pricing tier. The effect divides by its uses: two highlighted items compete, five are camouflage.",
+    confidence: 0.88,
+  },
+  {
+    kind: "layout",
+    content:
+      "Items at the start and end of a sequence are recalled best while the middle blurs (serial-position effect): place the most important nav destinations first and last, open lists with the highest-value item, and end feature runs on the strongest point. Anything that must live mid-list needs extra visual weight to survive there.",
+    confidence: 0.85,
+  },
+  {
+    kind: "process",
+    content:
+      "Visually refined interfaces are perceived as easier to use and earn real tolerance for small flaws (aesthetic-usability effect) — polish is functional because it buys patience during friction. The same effect is a testing hazard: users under-report problems on beautiful UIs, so validate flows with task metrics, not compliments.",
+    confidence: 0.87,
+  },
+  {
+    kind: "other",
+    content:
+      "Keep system response under 400ms and users stay in a flow state where attention never breaks; beyond it, waits invite task-switching and errors compound (Doherty threshold). Engineer toward the number — cache, prefetch on hover intent, render optimistically — and when a response must exceed it, occupy the gap with visible progress.",
+    confidence: 0.93,
+  },
+  {
+    kind: "process",
+    content:
+      "Every task carries irreducible complexity; the only design question is who absorbs it (Tesler's law). Move it into the system, not the user: address lookup instead of five fields, smart defaults instead of mandatory choices, auto-detected card type instead of a dropdown — one engineering week spent absorbing complexity removes it from every user forever.",
+    confidence: 0.88,
+  },
+  {
+    kind: "other",
+    content:
+      "Accept input liberally, emit output conservatively (Postel's law applied to UI): let users paste phone numbers with spaces, dates in any common format, or card numbers with dashes, then normalize to one canonical display form. Rejecting '4242-4242' when the digits are right punishes the user for the parser's laziness — a self-inflicted abandonment.",
+    confidence: 0.87,
+  },
+  {
+    kind: "conversion",
+    content:
+      "Effort accelerates as the goal nears (goal-gradient effect), so make progress visible and start it above zero: a checkout progress bar, a profile meter that opens at 20% because signup already counted, a loyalty card with 2 of 10 stamps pre-filled. Perceived proximity to the finish — not actual effort remaining — is what drives completion.",
+    confidence: 0.87,
+  },
+  {
+    kind: "conversion",
+    content:
+      "Unfinished tasks occupy memory more insistently than completed ones (Zeigarnik effect): a visible 'Draft' badge, an incomplete-setup checklist, or a cart count creates an open loop that pulls users back to close it. Harness it by saving state so returners land exactly where they stopped — and never manufacture false incompleteness, which reads as manipulation once noticed.",
+    confidence: 0.85,
+  },
+  {
+    kind: "layout",
+    content:
+      "In forms, distance declares ownership: a label must sit closer to its own input (4-8px) than to the neighboring field (16-24px+), or eyes pair labels with the wrong control (law of proximity applied to forms). The same rule binds helper text and error messages — attach them to the field they describe, tighter than any surrounding gap.",
+    confidence: 0.89,
+  },
+  {
+    kind: "layout",
+    content:
+      "Elements placed close together read as one group before any border or background is even noticed (Gestalt: proximity), so encode structure in whitespace first: keep spacing inside a group at most half the spacing between groups — 8px within, 24px+ between. Most boxes and divider lines are compensation for spacing that failed to communicate.",
+    confidence: 0.9,
+  },
+  {
+    kind: "layout",
+    content:
+      "Elements sharing color, shape, or size are perceived as the same kind of thing (Gestalt: similarity), so assign exactly one treatment per role — every link one style, every destructive action one red, every card one radius. The corollary bites harder: style a non-interactive element like a button and users will tap it forever.",
+    confidence: 0.89,
+  },
+  {
+    kind: "layout",
+    content:
+      "The mind completes partial shapes into wholes (Gestalt: closure), which turns deliberate truncation into an affordance: let a carousel's next card peek 16-24px past the viewport edge and users infer more content and swipe — hide the cut cleanly and the row reads as finished. The same mechanism is why simplified icons stay recognizable with half their strokes removed.",
+    confidence: 0.86,
+  },
+  {
+    kind: "layout",
+    content:
+      "The eye travels along implied lines and keeps going (Gestalt: continuity), making shared edges the skeleton of a layout: align headings, body copy, and controls to a few common vertical lines and the page reads in smooth strokes. Every element sitting slightly off an established line creates a snag the eye must resolve — a 2px misalignment can make a clean design feel subtly broken.",
+    confidence: 0.88,
+  },
+  {
+    kind: "layout",
+    content:
+      "Perception splits every view into figure and ground, and the design must decide which is which (Gestalt: figure-ground): a modal earns focus through a 40-60% scrim that demotes the page behind it, and content becomes the figure when surrounding chrome stays low-contrast. Ambiguity here is expensive — users who can't tell overlay from page misjudge what a click will act on.",
+    confidence: 0.86,
+  },
+  {
+    kind: "conversion",
+    content:
+      "Honest design is a conversion mechanism, not only an ethic (Rams: good design is honest): surprise costs at checkout are the most-cited abandonment reason (~48% in Baymard's surveys), and confirmshaming, buried unsubscribes, and fake urgency each convert once while training the user never to trust the interface again. Show the full price early, make declining easy, and let real scarcity be the only scarcity shown.",
+    confidence: 0.89,
+  },
+  {
+    kind: "process",
+    content:
+      "Interfaces are tools, and tools should recede while the user's work advances (Rams: unobtrusive design): keep chrome neutral and quiet so the user's own content — their photos, numbers, writing — is the most vivid thing on screen. The test: screenshot a populated view and ask what dominates; if the answer is the UI, it is competing with its own purpose.",
+    confidence: 0.85,
+  },
+  {
+    kind: "process",
+    content:
+      "Less, but better (Rams: as little design as possible): every element, color, and effect taxes attention whether or not it helps, so each must justify its existence. Practice it as subtraction — remove elements one at a time until the design stops working, then restore only the last one; what survives is the design.",
+    confidence: 0.86,
+  },
+  {
+    kind: "process",
+    content:
+      "Nothing in an interface is too small to be arbitrary (Rams: thorough down to the last detail): empty states, loading states, focus rings, truncation, and pluralization are where a product spends most of its life. Users read this care as reliability — an interface precise in its details gets trusted with money and data; one that renders '1 items' does not.",
+    confidence: 0.87,
+  },
+  {
+    kind: "typography",
+    content:
+      "Hold body text to a 45-75 character measure (~66 is the classic ideal; max-width: 65ch in CSS): longer lines make the return sweep to the next line error-prone, while shorter ones break rhythm with constant returns. This is the highest-leverage readability fix available — unconstrained full-width text routinely runs 120+ characters.",
+    confidence: 0.9,
+  },
+  {
+    kind: "typography",
+    content:
+      "Line-height runs inverse to size: body text needs 1.4-1.6 so lines stay distinct during the return sweep, while display type above ~40px tightens to 1.1-1.2 because at that scale the same proportional gap reads as detached, floating lines. A single line-height token applied everywhere fails at both ends of the scale.",
+    confidence: 0.89,
+  },
+  {
+    kind: "typography",
+    content:
+      "Derive the type scale from one ratio — 1.2 (minor third) for dense product UI up to 1.333 (perfect fourth) for editorial drama — multiplied up from the body size, so every size pair shares the same proportional relationship and hierarchy feels inevitable rather than arbitrary. Picking sizes by eye is how a page ends up with 14, 15, 17, and 19px all claiming different jobs.",
+    confidence: 0.85,
+  },
+  {
+    kind: "typography",
+    content:
+      "Scanning eyes trace an F on text-heavy pages — across the top, a shorter sweep lower down, then a skim down the left edge — so the first two words of every heading, link, and list item carry most of the scan (F-pattern). Front-load information-bearing words ('Pricing plans', not 'Learn more about our pricing plans') and start paragraphs with their key term.",
+    confidence: 0.87,
+  },
+  {
+    kind: "layout",
+    content:
+      "On sparse pages the eye sweeps a Z — across the top bar, diagonally through the middle, along the bottom (Z-pattern) — which is why the canonical hero works: logo top-left, secondary action top-right, value proposition on the diagonal, primary CTA at the bottom-right terminal where the sweep ends. Reserve it for low-density layouts; dense text reverts to F-pattern scanning.",
+    confidence: 0.84,
+  },
+  {
+    kind: "typography",
+    content:
+      "Set web body text left-aligned ragged-right, never justified: browsers justify by stretching word spaces without hyphenation, carving distracting rivers of white through paragraphs, while the ragged edge is functional — each line's unique endpoint is a landmark for accurate return sweeps. Center only 1-2 line headings; a centered paragraph makes every line-start a search.",
+    confidence: 0.88,
+  },
+  {
+    kind: "color",
+    content:
+      "Distribute color roughly 60-30-10: a dominant neutral over ~60% of the surface, a secondary tone ~30%, the accent ~10% — proportion, more than hue choice, is what makes a palette feel composed. Past ~10% coverage an accent stops highlighting and starts wallpapering, and the design loses its pointing finger.",
+    confidence: 0.85,
+  },
+  {
+    kind: "color",
+    content:
+      "Split color's two jobs: hue carries meaning (red destructive, green success, brand accent interactive) while lightness and contrast carry hierarchy (darker means more important on light backgrounds). The division survives color-blindness and grayscale because structure never depends on telling hues apart — if the hierarchy vanishes when desaturated, it was never really there.",
+    confidence: 0.88,
+  },
+  {
+    kind: "process",
+    content:
+      "Squint at the screen or blur the screenshot until detail dissolves: whatever still stands out is the actual hierarchy, regardless of intent (the squint test). If the primary action doesn't survive the blur, or three elements fight for dominance, fix size, weight, and contrast before shipping — the test approximates first-glance vision, which is how every user meets the page.",
+    confidence: 0.85,
+  },
+  {
+    kind: "color",
+    content:
+      "Give the accent color one exclusive job — marking what is interactive — and never spend it on decoration: when everything accent-colored is clickable and nothing else is, color itself becomes the affordance and users stop guessing. A decorative headline set in the link color is a broken promise that costs real clicks.",
+    confidence: 0.87,
+  },
+  {
+    kind: "color",
+    content:
+      "Warm, saturated colors advance toward the eye while cool, muted ones recede — an attention mechanism, not merely a mood: an orange CTA on a cool blue-gray field pops forward with no extra size, and backgrounds stay backgrounds by staying cool and desaturated. Reverse the pairing — warm walls, cool button — and the chrome upstages the action.",
+    confidence: 0.84,
+  },
+  {
+    kind: "other",
+    content:
+      "For actions that succeed ~99% of the time (likes, toggles, renames, reorders), update the interface immediately and reconcile with the server in the background — optimistic UI deletes perceived latency entirely. The contract is graceful failure: on rejection, revert visibly with an explanation and retry path; never apply it to payments or destructive operations where a false success is costly.",
+    confidence: 0.86,
+  },
+  {
+    kind: "other",
+    content:
+      "Skeleton screens beat spinners on perceived speed because they show the page's structure forming — attention goes to anticipating content, while a spinner aims it at the waiting itself. Shape skeletons to the real layout so loaded content replaces placeholders without shifting anything, and cap them at ~2-3s of wait; beyond that users need real progress, not gray boxes.",
+    confidence: 0.86,
+  },
+  {
+    kind: "other",
+    content:
+      "A disabled control with no explanation is a dead end users re-click in confusion: pair every disabled state with its reason and unlock path ('Add a payment method to publish'), or better, leave the button enabled and surface the specific blocking error on click. Explained-and-actionable beats grayed-and-mute in every funnel.",
+    confidence: 0.86,
+  },
+  {
+    kind: "other",
+    content:
+      "Protect destructive actions with distance plus friction proportional to blast radius: separate 'Delete' from 'Save' spatially so a slip can't reach it (Fitts's law inverted), default focus to the safe option, and scale confirmation to consequence — an undo toast for one item, typed confirmation of the project's name for the irreversible. Friction on rare destruction costs seconds; a mis-tap on it costs everything.",
+    confidence: 0.88,
+  },
+  {
+    kind: "conversion",
+    content:
+      "The empty state is the one screen every new user is guaranteed to see, so treat it as onboarding rather than absence: say what will live here, show what good looks like via an example or template, and offer exactly one CTA that creates the first item. A blank table reading 'No data' spends the highest-intent moment of the lifecycle saying nothing.",
+    confidence: 0.87,
+  },
+  {
+    kind: "other",
+    content:
+      "Design waits against the three response-time thresholds (Nielsen: 0.1s/1s/10s): under 0.1s feels instantaneous and needs no indicator, under 1s keeps the thread of thought intact though the delay is felt, and by 10s attention is gone. Show progress for anything past ~1s — determinate with time remaining where possible — and past ~10s offer cancel and background completion, because users will task-switch regardless.",
+    confidence: 0.9,
+  },
 ];

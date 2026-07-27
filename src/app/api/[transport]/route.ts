@@ -41,6 +41,7 @@ import {
   type ClientBrief,
 } from "@/lib/engines/briefs";
 import { auditMobile } from "@/lib/engines/mobileAudit";
+import { getBrainIndex } from "@/lib/engines/brainIndex";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -224,11 +225,34 @@ const handler = createMcpHandler(
       {
         query: z.string().describe("Natural-language search query"),
         industry: z.string().optional().describe("Restrict results to this industry"),
+        kind: z
+          .enum(["memory", "insight"])
+          .optional()
+          .describe("Target one knowledge type: 'memory' = full design analyses, 'insight' = distilled principles"),
         limit: z.number().int().positive().optional().describe("Max hits to return"),
       },
       async (args) => {
         try {
-          return ok(await searchMemory(args.query, { industry: args.industry, limit: args.limit }));
+          return ok(
+            await searchMemory(args.query, {
+              industry: args.industry,
+              limit: args.limit,
+              kind: args.kind,
+            }),
+          );
+        } catch (err) {
+          return fail(err);
+        }
+      },
+    );
+
+    server.tool(
+      "get_brain_index",
+      "The organized map of everything Sentinel knows: pattern slugs grouped by category with conversion scores, covered industries, reference memory titles, confidential-work counts by industry, insight counts by kind, and how to query each. Call FIRST when you are unsure what knowledge exists or how to ask for it — one index call makes every subsequent query precise instead of guessed.",
+      {},
+      async () => {
+        try {
+          return ok(await getBrainIndex());
         } catch (err) {
           return fail(err);
         }

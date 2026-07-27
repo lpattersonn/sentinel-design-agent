@@ -41,7 +41,8 @@ For local development point at `http://localhost:3000/api/mcp` (no header needed
 | `analyze_design` | `sourceType` (url/html/screenshot/figma/description), `content`, `title?`, `industry?`, `brand?`, `tags?` | Whenever the user shares a design they admire or want to reference. Stores it as permanent memory. |
 | `score_design` | `html?`, `url?`, `description?`, `context?`, `projectId?` | After completing a page — 11-dimension 0–100 breakdown with ordered improvements. Iterate until the overall score clears the bar. |
 | `learn` | `project`, `outcome` (accepted/revision_requested/converted/rejected), `details?`, `patternSlugs?`, `memoryIds?`, `componentsChanged?`, `industry?` | Whenever the user reports how delivered work landed — client feedback, conversion results, rejections. |
-| `search_memory` | `query`, `industry?`, `limit?` | To recall specific stored designs or insights ("that dark fintech hero we analyzed"). |
+| `search_memory` | `query`, `kind?` (memory/insight), `industry?`, `limit?` | To recall stored designs or principles ("that dark fintech hero we analyzed"); use `kind` to target full analyses vs distilled principles. |
+| `get_brain_index` | *(none)* | When unsure what Sentinel knows — the organized map: pattern slugs by category, industries, insight kinds, memory titles. Call once, then query precisely. |
 | `find_patterns` | `category?`, `industry?`, `query?`, `limit?` | To pick a proven pattern for one section (hero, pricing, cta, testimonials, navigation, cards, forms, dashboard, feature-grid, faq, footer). |
 | `suggest_layout` | `pageType`, `industry`, `goals?` | When starting a page from scratch — ordered sections with pattern slugs and rationale. |
 | `generate_design_system` | `brandPersonality`, `industry`, `inspiration?` | At project kickoff — full token spec: colors, type scale, spacing, radii, shadows, motion. |
