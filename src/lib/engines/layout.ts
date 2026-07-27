@@ -16,7 +16,7 @@ Rules:
 - patternSlug may ONLY contain slugs that literally appear in the provided CONTEXT; use null otherwise.
 - grid: one concrete spec, e.g. "12-col, 1200px container, 24px gutters".
 - navigation: concrete structure and behavior (items, CTA placement, sticky/scroll behavior).
-- mobileNotes: what reorders, collapses, or resizes on small screens (mobile-first).
+- mobileNotes: concrete, not hand-wavy — per-section collapse behavior (what stacks, what hides, what reorders) PLUS the mobile spacing system: edge gutters in px, mobile section padding (compressed from desktop, e.g. 96px -> 48-64px), stack gaps on the 8px scale, and tap-target sizing for the primary CTAs.
 - conversionNotes: the specific conversion levers this layout pulls and why.
 - When CONTEXT is empty, design fully from expert knowledge — never a weaker answer.`;
 

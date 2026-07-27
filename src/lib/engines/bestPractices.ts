@@ -111,7 +111,8 @@ Rules:
 - patternSlug fields may ONLY contain slugs that literally appear in the provided CONTEXT. If no context pattern fits, use null and still give a full recommendation from expert knowledge.
 - "sources" may only list slugs/titles/ids present in the CONTEXT. If the CONTEXT is empty, sources must be [].
 - promptEnhancement is a dense directive block a coding agent can follow verbatim: imperative sentences, concrete numbers, mobile-first, WCAG AA as the accessibility floor, restrained purposeful motion.
-- When CONTEXT is empty or thin, answer fully from principal-level expert knowledge — the brief must never get weaker because retrieval found nothing.`;
+- When CONTEXT is empty or thin, answer fully from principal-level expert knowledge — the brief must never get weaker because retrieval found nothing.
+- MOBILE IS MANDATORY, SPACING INCLUDED: spacingRules must state the mobile spacing system explicitly (edge gutters in px, mobile section padding compressed from desktop — e.g. 96-128px stepping to 48-64px, stack gaps on the 8px scale), and promptEnhancement must contain a mobile spec block: breakpoints, nav collapse behavior, tap-target minimums (44px, 8px between), mobile type steps (body/inputs >= 16px), and the mobile spacing values. A bundle without concrete mobile spacing is incomplete.`;
 
 export async function retrieveBestPractices(input: {
   pageType: string;

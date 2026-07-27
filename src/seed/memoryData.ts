@@ -468,4 +468,28 @@ export const seedInsights: SeedInsight[] = [
       "Treat WCAG AA contrast (4.5:1 body, 3:1 large text) as a hard floor, not a target — muted 'aesthetic gray' text below it is the most common self-inflicted wound in otherwise polished UI. Design the muted tone by picking the closest passing value.",
     confidence: 0.95,
   },
+  {
+    kind: "layout",
+    content:
+      "Compress spacing proportionally on mobile, don't just reflow: desktop section padding of 96-128px steps down to 48-64px at 360-430px widths, and edge gutters never drop below 16px (20-24px preferred). Stay on the 8px scale while compressing — mobile is where hand-tuned off-grid values creep back in.",
+    confidence: 0.9,
+  },
+  {
+    kind: "layout",
+    content:
+      "Spacing between tap targets is itself a tap-target rule: keep a minimum 8px gap between adjacent interactive elements so 44-48px targets don't merge into a mis-tap cluster. A row of 44px icons with 2px gaps is functionally one unpredictable button.",
+    confidence: 0.88,
+  },
+  {
+    kind: "conversion",
+    content:
+      "On mobile forms, input font-size below 16px triggers iOS auto-zoom that breaks the layout mid-entry — 16px is a hard floor, not a style choice. Place the primary CTA full-width in the bottom thumb zone at 48px tall; top-corner CTAs are the hardest pixels on the screen to reach one-handed.",
+    confidence: 0.9,
+  },
+  {
+    kind: "process",
+    content:
+      "Horizontal overflow is the most common mobile defect: one fixed-width table, unwrapped code block, or 100vw+padding section makes the whole page wobble sideways. Audit every page at 360px — nothing except an intentional carousel or scroll container may scroll horizontally, and offenders get their own overflow-x wrapper, never the body.",
+    confidence: 0.87,
+  },
 ];

@@ -120,6 +120,48 @@ export type ScoreResult = {
 };
 
 // ---------------------------------------------------------------------------
+// Mobile audit
+// ---------------------------------------------------------------------------
+
+export const MobileAuditSchema = z.object({
+  checks: z.array(
+    z.object({
+      category: z.enum([
+        "layout",
+        "spacing",
+        "touch",
+        "typography",
+        "forms",
+        "navigation",
+        "media",
+        "accessibility",
+      ]),
+      check: z.string().describe("What was checked, e.g. 'no horizontal overflow at 360px'"),
+      status: z.enum(["pass", "fail", "unknown"]),
+      measured: z
+        .boolean()
+        .describe("true when verified by rendering/measurement; false when judged from source"),
+      evidence: z.string().describe("Concrete evidence: element, value, breakpoint"),
+      fix: z.string().nullable().describe("Concrete fix when status is fail, else null"),
+    }),
+  ),
+  blockers: z
+    .array(z.string())
+    .describe("Failing items that block 'done', ordered by severity — empty means ship-ready"),
+  spacingSpec: z
+    .object({
+      edgeGutterPx: z.number().describe("Horizontal padding between content and viewport edge"),
+      sectionPaddingMobile: z.string().describe("Vertical rhythm between sections at mobile, e.g. '48-64px'"),
+      stackGapPx: z.number().describe("Default gap between stacked elements"),
+      notes: z.string(),
+    })
+    .describe("The mobile spacing system this page follows (observed) or should follow (prescribed)"),
+  ready: z.boolean().describe("true only when blockers is empty"),
+  summary: z.string(),
+});
+export type MobileAudit = z.infer<typeof MobileAuditSchema>;
+
+// ---------------------------------------------------------------------------
 // Retrieval / best practices
 // ---------------------------------------------------------------------------
 

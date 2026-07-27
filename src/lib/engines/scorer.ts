@@ -33,7 +33,8 @@ Rules:
 - Every dimension's reasoning must cite concrete evidence from the provided source — specific elements, structure, copy, class names, measurements. Never score on vibes.
 - When the source gives limited signal for a dimension (e.g. animation or performance from static markup), say so explicitly in the reasoning and score conservatively from the evidence available.
 - "overall" is a weighted judgment of what matters most for this design's purpose — not an arithmetic average of the dimensions.
-- topImprovements must be ordered by impact, most valuable first.`;
+- topImprovements must be ordered by impact, most valuable first.
+- The mobile dimension must be judged at 360px and 768px specifically: horizontal overflow, tap targets >= 44px with >= 8px between them, body/input text >= 16px, nav collapse, and MOBILE SPACING — edge gutters >= 16px and section rhythm compressed proportionally (desktop 96-128px reading as ~48-64px), stack gaps on the 8px scale. Cite breakpoint-specific evidence; where the source cannot prove mobile behavior, say so and score conservatively. A page that has not addressed mobile cannot score above 60 on this dimension.`;
 
 function sanitizeSource(html: string): string {
   return html

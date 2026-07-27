@@ -17,6 +17,10 @@ import {
   serializeHits,
   serializePatterns,
 } from "@/lib/engines/bestPractices";
+import {
+  MOBILE_AUDIT_SYSTEM_PROMPT,
+  MOBILE_MEASUREMENT_GUIDE,
+} from "@/lib/engines/mobileAudit";
 import { PROMPT_SYSTEM_PROMPT, inferPageType } from "@/lib/engines/promptBuilder";
 import { LAYOUT_SYSTEM_PROMPT } from "@/lib/engines/layout";
 import { DESIGN_SYSTEM_SYSTEM_PROMPT } from "@/lib/engines/designSystem";
@@ -27,6 +31,7 @@ import {
   DesignSystemSpecSchema,
   InsightDraftSchema,
   LayoutSuggestionSchema,
+  MobileAuditSchema,
   PromptEnhancementSchema,
   ScoreBreakdownSchema,
   type AnalyzeInput,
@@ -224,6 +229,23 @@ export async function designSystemBrief(input: {
     ].join("\n"),
     outputSchema: z.toJSONSchema(DesignSystemSpecSchema),
     then: "Produce the design system yourself following the instructions, then apply its tokens consistently instead of inventing values ad hoc. No save call needed.",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// audit_mobile → brief (working gate — result is applied, not persisted)
+// ---------------------------------------------------------------------------
+
+export async function mobileAuditBrief(input: ScoreInput): Promise<ClientBrief> {
+  const { sourceText, target } = await prepareScoreSource(input);
+  return {
+    mode: "client-brain",
+    discipline: DISCIPLINE_CORE,
+    task: `Audit ${target} for mobile perfection at 360/390/768px — layout, SPACING, touch, typography, forms, navigation, media, accessibility.`,
+    instructions: `${MOBILE_AUDIT_SYSTEM_PROMPT}\n\n${MOBILE_MEASUREMENT_GUIDE}`,
+    source: sourceText,
+    outputSchema: z.toJSONSchema(MobileAuditSchema),
+    then: "Produce the audit as JSON satisfying outputSchema. Then FIX every blocker in the actual code (each fail includes its concrete fix), re-run audit_mobile, and repeat until ready=true with zero blockers. Treat measured=false passes as provisional — measure them if you gain browser access. The page is not done until this gate is clear. No save call needed.",
   };
 }
 

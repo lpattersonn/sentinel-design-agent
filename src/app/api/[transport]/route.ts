@@ -35,10 +35,12 @@ import {
   designSystemBrief,
   insightBrief,
   layoutBrief,
+  mobileAuditBrief,
   promptBrief,
   scoreBrief,
   type ClientBrief,
 } from "@/lib/engines/briefs";
+import { auditMobile } from "@/lib/engines/mobileAudit";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -321,6 +323,26 @@ const handler = createMcpHandler(
       async (args) => {
         try {
           return ok(await persistScore(args.breakdown, args.target, args.projectId));
+        } catch (err) {
+          return fail(err);
+        }
+      },
+    );
+
+    server.tool(
+      "audit_mobile",
+      "The mobile-perfection gate: audit a page at 360/390/768px across layout, SPACING (edge gutters, compressed section rhythm, stack gaps, tap-target spacing, safe areas), touch targets, typography, forms, navigation, media, and accessibility. Returns per-check pass/fail with concrete fixes, an ordered blocker list, and the mobile spacing spec the page should follow. Call BEFORE declaring any page or UI done — a page with blockers is not done; fix them and re-audit until ready=true. Prefer real measurement (render + measure) over judgment when you have browser tooling." +
+        (CLIENT ? briefNote : ""),
+      {
+        html: z.string().optional().describe("Raw HTML of the page to audit"),
+        url: z.string().optional().describe("URL of a live page to fetch and audit"),
+        description: z.string().optional().describe("Textual description when no source is available (weak — prefer html/url)"),
+        context: z.string().optional().describe("What the page is for, to sharpen the audit"),
+      },
+      async (args) => {
+        try {
+          if (CLIENT) return okBrief(await mobileAuditBrief(args));
+          return ok(await auditMobile(args));
         } catch (err) {
           return fail(err);
         }

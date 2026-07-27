@@ -33,7 +33,8 @@ Rules:
 - designRules is the discrete list of rules you injected — each self-contained and specific (e.g. "Section vertical padding: 96px desktop / 64px mobile"), never restating the user's own requirements.
 - inspiration names the brands, memories, or insights actually drawn on (from the provided context, or well-known exemplars when context is empty).
 - rationale explains in a short paragraph why this direction fits the page type and industry.
-- If the BEST-PRACTICE CONTEXT is unavailable or empty, direct from expert knowledge — the output must never be weaker for it.`;
+- If the BEST-PRACTICE CONTEXT is unavailable or empty, direct from expert knowledge — the output must never be weaker for it.
+- enhancedPrompt must ALWAYS include an explicit mobile spec: breakpoints, nav collapse pattern, tap targets (>= 44px, >= 8px apart), body/input type >= 16px, and MOBILE SPACING with real values — edge gutters (16-24px), mobile section padding compressed from desktop (e.g. 96px -> 48-64px), stack gaps on the 8px scale. End the prompt with: build mobile-first and run audit_mobile before calling the page done.`;
 
 export async function improvePrompt(input: {
   prompt: string;

@@ -45,6 +45,7 @@ For local development point at `http://localhost:3000/api/mcp` (no header needed
 | `find_patterns` | `category?`, `industry?`, `query?`, `limit?` | To pick a proven pattern for one section (hero, pricing, cta, testimonials, navigation, cards, forms, dashboard, feature-grid, faq, footer). |
 | `suggest_layout` | `pageType`, `industry`, `goals?` | When starting a page from scratch — ordered sections with pattern slugs and rationale. |
 | `generate_design_system` | `brandPersonality`, `industry`, `inspiration?` | At project kickoff — full token spec: colors, type scale, spacing, radii, shadows, motion. |
+| `audit_mobile` | `html?`, `url?`, `description?`, `context?` | Before declaring any page done — audits 360/390/768px across layout, spacing (gutters, section rhythm, stack gaps, tap spacing), touch, typography, forms, nav, media, a11y. Zero blockers = done. |
 | `sentinel_ultra` | `level?` (full/plan/verify) | When the user says "Sentinel Ultra" / "ultra mode" / "SU:", or before high-stakes work — returns the operating doctrine (judgment, planning, verification, reasoning) to adopt for the session. |
 
 Note: in **server-brain** mode (`ANTHROPIC_API_KEY` set on the server) the LLM-backed tools
@@ -107,6 +108,10 @@ This project uses the Sentinel design-intelligence server. Follow this workflow 
 4. AFTER completing a page or significant UI change: call `score_design` on the result.
    If the overall score is below 85, apply the `topImprovements` and re-score. Repeat
    until >= 85 or the user says stop. Report the final score and what changed.
+   THEN call `audit_mobile` — the page is not done until the audit reports zero
+   blockers. Fix every blocker (each comes with a concrete fix), re-audit, repeat.
+   When you have browser tooling (Playwright etc.), measure at 360/390/768px instead
+   of judging from source, and honor the returned mobile spacing spec.
 5. When the user relays feedback on delivered work (client accepted, asked for
    revisions, converted, rejected): call `learn` with the outcome, details, and the
    pattern slugs / memory IDs that were used.
